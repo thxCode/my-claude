@@ -1,7 +1,8 @@
 ---
 name: address-pr-review
 description: "Read the review feedback already left on a pull request, triage each comment against the actual source (real bug vs. false positive), fix the real ones surgically, keep the git history clean by folding fixes into the right commit, and close the loop by replying to / resolving threads and updating the PR. This CONSUMES existing review comments and acts on them — it is the counterpart to skills that GENERATE a review (e.g. gitnexus-pr-review, /review). Examples: \"address the review comments on this PR\", \"the bot left review comments, fix the real ones\", \"how do I handle the feedback on PR #1\", \"apply the reviewer's suggestions and clean up the git log\", \"triage the Copilot review and reply to the wrong ones\"."
-allowed-tools: "Bash(gh pr view*), Bash(gh pr status*), Bash(gh pr diff*), Bash(gh api*), Bash(gh pr checks*), Bash(git log*), Bash(git diff*), Bash(git show*), Bash(git status*), Bash(git rev-parse*), Bash(git fetch*), Bash(git rev-list*), Bash(git blame*), Read, Grep, Glob"
+allowed-tools: "mcp__plugin_github_github__list_pull_requests, mcp__plugin_github_github__pull_request_read, mcp__plugin_github_github__add_reply_to_pull_request_comment, mcp__plugin_github_github__pull_request_review_write, Bash(git log*), Bash(git diff*), Bash(git show*), Bash(git status*), Bash(git rev-parse*), Bash(git remote*), Bash(git fetch*), Bash(git rev-list*), Bash(git blame*), Read, Grep, Glob"
+model: opus
 ---
 
 # Address PR review feedback
@@ -16,32 +17,33 @@ against the source first.
 
 ### 1. Locate the PR
 
+Resolve `owner` / `repo` and the PR number for the current branch:
+
 ```bash
-gh pr view --json number,title,url,state,reviewDecision   # PR for the current branch
-gh pr checks                                              # which CI checks are failing
+git remote get-url origin          # parse <owner>/<repo> from this
+git rev-parse --abbrev-ref HEAD    # current branch name
 ```
 
-If the user named a PR number, use it explicitly in the commands below.
+- If the user named a PR number, use it directly.
+- Otherwise call `list_pull_requests` with `head: "<owner>:<branch>"`, `state: "open"` to find it.
+
+Then read the PR and its CI state with `pull_request_read` (same `owner` / `repo` / `pullNumber`):
+- `method: get` — title, state, reviewDecision.
+- `method: get_check_runs` (and `get_status`) — which CI checks are failing.
 
 ### 2. Read ALL three kinds of feedback
 
-GitHub stores review feedback in three separate places. Looking at only one of them misses comments.
+GitHub stores review feedback in three separate places. Looking at only one of them misses comments. All
+three come from `pull_request_read` (same `owner` / `repo` / `pullNumber`):
 
-```bash
-# ① Top-level reviews — carries the state (APPROVED / CHANGES_REQUESTED / COMMENTED) and summary body
-gh pr view <N> --json reviews \
-  --jq '.reviews[] | {author:.author.login, state:.state, body:.body, submittedAt:.submittedAt}'
+- **① Top-level reviews** (`method: get_reviews`) — carries the state (APPROVED / CHANGES_REQUESTED /
+  COMMENTED) and the summary body.
+- **② Inline review comments** (`method: get_review_comments`) — the most actionable feedback, bound to a
+  file + line. Returns review **threads** with `isResolved` / `isOutdated` **and each thread's node id
+  (`PRRT_…`)** — keep that id, you need it to resolve the thread in step 8.
+- **③ Issue comments** (`method: get_comments`) — the PR conversation, not tied to any line.
 
-# ② Inline review comments — bound to a file + line of the diff (most actionable feedback lives here)
-gh api repos/<OWNER>/<REPO>/pulls/<N>/comments \
-  --jq '.[] | "#\(.id) [\(.path):\(.line // .original_line)]\n\(.body)\n"'
-
-# ③ Issue comments — the PR conversation, not tied to any line
-gh pr view <N> --json comments --jq '.comments[] | {author:.author.login, body:.body}'
-```
-
-Tip: do NOT pull `diff_hunk` in the inline-comment jq — it dumps the whole diff and blows up the output.
-Use `--jq` to keep just `id / path / line / body`.
+Page with `perPage` / `after` if there are many comments.
 
 ### 3. Triage — verify every comment against the source (the important step)
 
@@ -118,38 +120,15 @@ Two buckets, two behaviors:
 - **Not fixed** (false positive, intentionally kept, or deferred) → reply with the reasoning and
   **leave the thread open** so a human reviewer sees it and decides. Never resolve what you did not change.
 
-Resolving needs the GraphQL **thread id** (`PRRT_…`), which is NOT the REST comment id. Fetch both so you
-can map each comment to its thread:
+You already have each thread's id (`PRRT_…`) and its comments from step 2's `get_review_comments` — no extra
+lookup needed.
 
-```bash
-gh api graphql -f query='
-query {
-  repository(owner: "<OWNER>", name: "<REPO>") {
-    pullRequest(number: <N>) {
-      reviewThreads(first: 100) {
-        nodes { id isResolved comments(first:1){nodes{databaseId path line}} }
-      }
-    }
-  }
-}' --jq '.data.repository.pullRequest.reviewThreads.nodes[]
-         | {threadId:.id, resolved:.isResolved, commentId:.comments.nodes[0].databaseId, path:.comments.nodes[0].path}'
-```
+- **Reply:** `add_reply_to_pull_request_comment` with `commentId` (the comment's databaseId) and `body`.
+- **Resolve** (only the fixed ones): `pull_request_review_write` with `method: resolve_thread` and
+  `threadId` (the `PRRT_…` id).
 
-Reply to a thread (REST, keyed by the comment's databaseId). `$` and backticks are safe inside single quotes:
-
-```bash
-gh api repos/<OWNER>/<REPO>/pulls/<N>/comments/<COMMENT_ID>/replies -f body='<explanation>'
-```
-
-Resolve a thread (GraphQL, keyed by the thread id) — only for the fixed ones:
-
-```bash
-gh api graphql \
-  -f query='mutation($t:ID!){resolveReviewThread(input:{threadId:$t}){thread{isResolved}}}' \
-  -f t='<THREAD_ID>'
-```
-
-Finally, re-run the reviewThreads query and confirm the end state: fixed → RESOLVED, not-fixed → open.
+Finally, re-read with `pull_request_read` (`method: get_review_comments`) and confirm the end state:
+fixed → resolved, not-fixed → open.
 
 ## Output
 
