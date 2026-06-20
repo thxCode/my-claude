@@ -60,7 +60,14 @@ Custom slash commands live in [`commands/`](commands).
 - **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions); confirms and commits after each task.
 - **`/my-ship [spec title]`** — Finalizes a spec: optional e2e tests (writing fixes back to spec + the cheapest appropriate test coverage), refreshes the overview, and updates docs/ADRs; conforms to project conventions.
 
-> **Models.** `/my-spec` and `/my-plan` run on **opus** (their heavy reasoning is front-loaded in the first turn); `/my-build` and `/my-ship` on **sonnet**. The `model:` frontmatter only applies to a command's **first turn** — for a full multi-turn build/ship session, run `/model sonnet` first.
+## Skills
+
+Custom skills live in [`skills/`](skills); Claude invokes them automatically when a task matches, or you can call one explicitly (e.g. `/auto-research`).
+
+- **`search-first`** — Research-before-coding workflow: searches for existing tools, libraries, and patterns before writing custom code, so you reuse instead of reinventing. Invokes the researcher agent.
+- **`address-pr-review`** — Consumes the review comments **already left** on a PR: triages each one against the source (real bug vs. false positive), fixes the real ones surgically, folds the fixes into the right commit to keep history clean, then replies to / resolves the threads. The counterpart to skills that *generate* a review.
+- **`auto-research`** — Autonomous research harness: decomposes a topic, fans out web searches, adversarially verifies every claim against its source, then synthesizes a Perplexity-style cited report at `.claude/reports/<title>.md`. Cost-aware (throttles on rate-limit usage) and observable (per-round digest). After showing the plan it runs unattended (**auto mode**) or pauses for per-round approval (**manual-approve mode**).
+
 
 ## License
 

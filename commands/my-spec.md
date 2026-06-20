@@ -43,6 +43,10 @@ fix** (something is broken)? Infer it; anything that isn't a clear bug takes the
    - `agent-skills:interview-me` — when the underlying intent isn't clear yet / not in context (extract what
      the user actually wants, one question at a time).
    - `agent-skills:idea-refine` — when the idea is present but vague (sharpen and stress-test it).
+   - `auto-research` — when the motivation depends on external facts the user can't supply from memory
+     (competitive analysis, prior art, market/landscape sizing). Invoke it, then fold its returned **research
+     digest** into Motivation and the stories' "so that `<benefit>`" clauses; its coverage gaps become Open
+     Questions.
    - If the stories are already concrete, skip refinement.
 3. Carry the **finalized user stories** into Phase 3 (they pre-fill clarifying area #5 and anchor the rest).
 

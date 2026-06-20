@@ -2,9 +2,12 @@
 
 !commands/my-*
 
+!skills/
 !skills/search-first/
 !skills/address-pr-review/
+!skills/auto-research/
+!skills/auto-research/**
 
-CLAUDE.md
-LICENSE
-README.md
+/CLAUDE.md
+/LICENSE
+/README.md
