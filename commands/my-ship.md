@@ -12,6 +12,12 @@ Tidy up after the build: validate end-to-end, keep the test suite healthy, and b
 and docs back in sync. Every change conforms to project conventions (spec **Code Style** & **Boundaries**,
 `CLAUDE.md`, existing test/doc structure).
 
+**Language convention.** Keep the channels separate:
+- **Talking to the user** (questions, confirmations, review summaries, status) → use the user's configured language.
+- **Writing the spec** (e2e fix write-backs, any spec edits) → write the content in **English**.
+- **Other artifacts** (tests, overview, docs/ADRs, commit messages, PR body) → follow the project's existing
+  conventions.
+
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS` (a title → `specs/<title>.md`; a path → use it; empty → if

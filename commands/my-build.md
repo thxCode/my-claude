@@ -11,6 +11,11 @@ Build from the spec: **$ARGUMENTS**
 Implement the spec's **Design Details** one task at a time. Output must conform to the project's conventions —
 the spec's **Code Style** and **Boundaries**, `CLAUDE.md`, and the surrounding code. Verify before you commit.
 
+**Language convention.** Keep the channels separate:
+- **Talking to the user** (questions, confirmations, summaries, status) → use the user's configured language.
+- **Writing the spec** (idea write-ins, task check-offs, any spec edits) → write the content in **English**.
+- **Other artifacts** (code, comments, commit messages, docs) → follow the project's existing conventions.
+
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS` (a title → `specs/<title>.md`; a path → use it; empty → if

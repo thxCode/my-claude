@@ -11,6 +11,11 @@ Start spec-driven development for: **$ARGUMENTS**
 Work through the phases below in order. Each phase gates the next — do not skip ahead.
 Ask the user only when the judgment is genuinely pivotal; infer the rest from context.
 
+**Language convention.** Two distinct channels — keep them separate:
+- **Talking to the user** (questions, confirmations, summaries, status) → use the user's configured language.
+- **Writing the spec** (every field of the spec file written to `specs/`) → write the content in **English**,
+  regardless of the conversation language.
+
 ## Phase 1 — Gather context
 
 **1a. Understand the project (Context).**

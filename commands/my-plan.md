@@ -10,6 +10,11 @@ Refine the plan inside a spec: **$ARGUMENTS**
 
 This command **only ever writes back the one spec file** — it makes no other edits. Stay read-only otherwise.
 
+**Language convention.** Two distinct channels — keep them separate:
+- **Talking to the user** (questions, confirmations, review summaries, status) → use the user's configured language.
+- **Writing the spec** (the enriched Design Details and filled Test Plan written back to the spec) → write the
+  content in **English**, regardless of the conversation language.
+
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS`:
