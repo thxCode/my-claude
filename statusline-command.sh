@@ -45,10 +45,15 @@ if [ -n "$used" ]; then
   out="${out}${SEP}${color}[${bar}] ${used_int}%${RESET}"
 fi
 
-# Cost
-cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
-if [ -n "$cost" ]; then
-  out="${out}${SEP}$(printf '$%.2f' "$cost")"
+# Detect a third-party proxy backend (e.g. Zhipu glm-*): cost is priced via Anthropic's rate card and is meaningless there
+is_glm=$(echo "$input" | jq -r '(.model.id // .model.display_name // "") | test("glm"; "i")')
+
+# Cost (only meaningful on the official Claude backend)
+if [ "$is_glm" != "true" ]; then
+  cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty')
+  if [ -n "$cost" ]; then
+    out="${out}${SEP}$(printf '$%.2f' "$cost")"
+  fi
 fi
 
 # Duration (Total Wall Clock Time)
