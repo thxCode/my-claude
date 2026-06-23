@@ -18,6 +18,9 @@ and docs back in sync. Every change conforms to project conventions (spec **Code
 - **Other artifacts** (tests, overview, docs/ADRs, commit messages, PR body) → follow the project's existing
   conventions.
 
+**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
+**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS` (a title → `specs/<title>.md`; a path → use it; empty → if

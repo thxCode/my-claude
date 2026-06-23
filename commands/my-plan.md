@@ -15,6 +15,9 @@ This command **only ever writes back the one spec file** — it makes no other e
 - **Writing the spec** (the enriched Design Details and filled Test Plan written back to the spec) → write the
   content in **English**, regardless of the conversation language.
 
+**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
+**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS`:
@@ -74,5 +77,5 @@ code solid enough prior to committing the changes necessary to implement this en
 2. **Wait for explicit user confirmation** — this is the one pivotal question of the command.
 3. On approval, write the changes back to the spec file. **Modify no other file.**
 4. Confirm the saved path. Ensure the final spec reads cleanly top-to-bottom — clear, logical, self-consistent.
-5. **Ask the user whether to run `/my-build` now.** If yes, remind them `/my-build` runs on **sonnet** — for a
-   full multi-turn build session, run `/model sonnet` first — then continue with this spec as its target.
+5. **Ask the user whether to run `/my-build` now.** If yes, remind them `/my-build` runs on **opus** — for a
+   full multi-turn build session, run `/model opus` first — then continue with this spec as its target.

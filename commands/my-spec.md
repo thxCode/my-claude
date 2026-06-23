@@ -16,6 +16,9 @@ Ask the user only when the judgment is genuinely pivotal; infer the rest from co
 - **Writing the spec** (every field of the spec file written to `specs/`) → write the content in **English**,
   regardless of the conversation language.
 
+**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
+**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+
 ## Phase 1 — Gather context
 
 **1a. Understand the project (Context).**

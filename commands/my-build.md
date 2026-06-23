@@ -1,7 +1,7 @@
 ---
 description: Implement a spec's Design Details task by task — TDD + incremental, conforming to project conventions, confirm & commit per task
 argument-hint: [spec title or path]
-model: sonnet
+model: opus
 ---
 
 # /my-build
@@ -15,6 +15,9 @@ the spec's **Code Style** and **Boundaries**, `CLAUDE.md`, and the surrounding c
 - **Talking to the user** (questions, confirmations, summaries, status) → use the user's configured language.
 - **Writing the spec** (idea write-ins, task check-offs, any spec edits) → write the content in **English**.
 - **Other artifacts** (code, comments, commit messages, docs) → follow the project's existing conventions.
+
+**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
+**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
 
 ## Phase 1 — Resolve the spec
 
