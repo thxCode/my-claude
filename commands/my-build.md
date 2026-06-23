@@ -11,13 +11,10 @@ Build from the spec: **$ARGUMENTS**
 Implement the spec's **Design Details** one task at a time. Output must conform to the project's conventions —
 the spec's **Code Style** and **Boundaries**, `CLAUDE.md`, and the surrounding code. Verify before you commit.
 
-**Language convention.** Keep the channels separate:
-- **Talking to the user** (questions, confirmations, summaries, status) → use the user's configured language.
-- **Writing the spec** (idea write-ins, task check-offs, any spec edits) → write the content in **English**.
-- **Other artifacts** (code, comments, commit messages, docs) → follow the project's existing conventions.
+**Language.** Talk to the user in their configured language; write spec edits (idea write-ins, task check-offs)
+in **English**; for other artifacts (code, comments, commits, docs) follow the project's existing conventions.
 
-**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
-**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 
 ## Phase 1 — Resolve the spec
 
@@ -35,8 +32,9 @@ the spec's **Code Style** and **Boundaries**, `CLAUDE.md`, and the surrounding c
 2. **Establish a clean git baseline.** Run `git status --porcelain`; if there are unrelated uncommitted
    changes, ask the user how to handle them before per-task commits. If on the default branch, create a
    feature branch named after the spec title first.
-3. **Backbone for the whole build:** `agent-skills:incremental-implementation` +
-   `agent-skills:test-driven-development`.
+3. **Backbone for the whole build (inline discipline):** work one vertical task at a time, never a big-bang
+   change; for each, drive with TDD — write a failing test first (RED), implement the minimum to pass (GREEN),
+   then keep the suite green. Detailed loop in Phase 3.
 4. **Extra skills, engaged by the nature of each task:**
    - **Refactoring** (rename / extract / split / move / restructure) → invoke `gitnexus-refactoring` **first**
      if available.
@@ -55,17 +53,22 @@ Take the next pending task from the Implementation Plan and do **one** task:
    surrounding code; run the project's lint/format commands (from the spec's Commands section).
 4. **When a spec detail is unclear or needs adjusting, ask the user** — don't guess. You may also suggest
    delegating the question to the `codex:codex-rescue` subagent (or another model).
-5. **If the user interrupts with a new idea:** confirm the change, write it into the spec file, then continue
-   building against the updated spec.
+5. **When the build changes the spec** — a user's new idea, *or* an implementation finding that overturns a
+   Goal / Feature / User Story / Risk — confirm it, then write it back **at the source**: fix the upstream
+   statement itself, not just the task line. Don't let a task-level resolution leave a stale Goal/Feature above
+   it. Then continue building against the reconciled spec.
 
 ## Phase 4 — Review & impact analysis
 
-Before committing the task:
+Before committing the task, review at a depth that matches the task's risk:
 
-1. Invoke `agent-skills:code-review-and-quality` to review this task's changes across correctness,
-   readability, architecture, security, and performance.
-2. If the task changed exported/shared symbols and `gitnexus-impact-analysis` is available, run one round of
-   impact analysis on them — what depends on them, what could break.
+1. **Routine task → inline self-review.** Check this task's diff on four axes: correctness (does it meet the
+   acceptance criteria, edge cases handled), readability, convention conformance (Code Style / Boundaries /
+   `CLAUDE.md` / surrounding code), and security.
+2. **Heavy task → full review.** When the task changed **exported/shared symbols**, is flagged as a **Risk**, or
+   is a **large change**, escalate to `agent-skills:code-review-and-quality` (five-axis review). At the same
+   threshold, if `gitnexus-impact-analysis` is available, run one round on the changed symbols — what depends on
+   them, what could break.
 3. If review or impact analysis surfaces problems, fix them (back to Phase 3) before moving on.
 
 ## Phase 5 — Confirm, commit, then continue

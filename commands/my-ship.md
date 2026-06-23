@@ -12,14 +12,10 @@ Tidy up after the build: validate end-to-end, keep the test suite healthy, and b
 and docs back in sync. Every change conforms to project conventions (spec **Code Style** & **Boundaries**,
 `CLAUDE.md`, existing test/doc structure).
 
-**Language convention.** Keep the channels separate:
-- **Talking to the user** (questions, confirmations, review summaries, status) → use the user's configured language.
-- **Writing the spec** (e2e fix write-backs, any spec edits) → write the content in **English**.
-- **Other artifacts** (tests, overview, docs/ADRs, commit messages, PR body) → follow the project's existing
-  conventions.
+**Language.** Talk to the user in their configured language; write spec edits (e2e fix write-backs) in
+**English**; for other artifacts (tests, overview, docs/ADRs, commits, PR body) follow the project's conventions.
 
-**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
-**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 
 ## Phase 1 — Resolve the spec
 
@@ -27,6 +23,9 @@ and docs back in sync. Every change conforms to project conventions (spec **Code
    `specs/` holds one spec use it, else list them and ask which).
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it now).
 3. **Run the full test suite; it must be green before finalizing** — fix failures or surface them.
+4. **Consistency scan (read-only).** Read Goals / Features / User Stories against the completed Implementation
+   Plan; flag any task whose built outcome contradicts an upstream statement. Surface conflicts and, on
+   confirmation, reconcile the upstream text — modifying only the spec — before finalizing.
 
 ## Phase 2 — End-to-end tests (only if an e2e skill is available)
 
@@ -46,8 +45,11 @@ Run only if the project has an overview-related skill:
 
 ## Phase 4 — Docs & ADRs
 
-Invoke `agent-skills:documentation-and-adrs`. Identify whether any documentation or architectural decision
-records need updating given what was built/changed, and complete the necessary updates.
+First judge whether the change is **architecturally significant** — new/changed public API, a new dependency, or
+an altered data flow:
+- **Significant** → invoke `agent-skills:documentation-and-adrs` to identify and complete the needed doc/ADR updates.
+- **Otherwise** → do a quick inline check: did this change make any existing doc stale? If so, update it; if not,
+  say so and move on. No ADR needed.
 
 ## Phase 5 — Confirm & commit
 
@@ -57,4 +59,7 @@ records need updating given what was built/changed, and complete the necessary u
    descriptive messages. **If nothing changed, skip the commit and say so.**
 4. **Ask whether to push the branch and open a PR** (use the spec's Summary + completed task list as the PR
    body). If yes, push and create it.
-5. Summarize what shipped and anything left for the user.
+5. **Mark the spec's terminal state.** Add (or update) a `Status:` line just under the spec's title —
+   `Status: Shipped` plus the PR link if one was opened. This leaves the spec carrying its own lifecycle trace.
+   Write this back in **English**, modifying only the spec file.
+6. Summarize what shipped and anything left for the user.

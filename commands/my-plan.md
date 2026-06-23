@@ -10,13 +10,15 @@ Refine the plan inside a spec: **$ARGUMENTS**
 
 This command **only ever writes back the one spec file** — it makes no other edits. Stay read-only otherwise.
 
-**Language convention.** Two distinct channels — keep them separate:
-- **Talking to the user** (questions, confirmations, review summaries, status) → use the user's configured language.
-- **Writing the spec** (the enriched Design Details and filled Test Plan written back to the spec) → write the
-  content in **English**, regardless of the conversation language.
+**Language.** Talk to the user in their configured language; write the spec content in **English**.
 
-**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
-**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
+
+**Planning mindset.** Plan deliberately, not in a race:
+- See clearly first — read what the requirement says *and* the current code before deciding anything.
+- Write down both what you're sure of and what you're not; revisit and adjust as you learn — no one-shot perfect pass.
+- Keep the plan legible to both of us. Resolve uncertainty with a test where you can; otherwise ask.
+- After each new piece, re-read the earlier parts so the whole stays self-consistent with nothing left out.
 
 ## Phase 1 — Resolve the spec
 
@@ -35,7 +37,7 @@ This command **only ever writes back the one spec file** — it makes no other e
 
 ## Phase 3 — Plan the implementation (Design Details)
 
-Invoke `agent-skills:planning-and-task-breakdown`. Then deepen the spec's **Design Details**:
+Deepen the spec's **Design Details**:
 
 - Sharpen **Commands / Project Structure / Code Style** with concrete specifics grounded in the codebase.
 - **Fill the Implementation Plan** subsection (replace its TODO): the dependency graph between components, work
@@ -46,6 +48,10 @@ Invoke `agent-skills:planning-and-task-breakdown`. Then deepen the spec's **Desi
   skew, migrations) or **reliability** (data loss, races, failure modes) — **raise it with the user before
   locking it in.** If the user agrees it's a risk, record it in the spec's **Risks and Mitigations** section
   as `Risk → Mitigation`.
+- **Reconcile upstream when planning contradicts it.** If grounding the plan reveals a **Goal / Feature / User
+  Story** that's infeasible or wrong against the real code, **don't just plan around it** — raise it with the
+  user, then fix the upstream statement at its source. Never leave a stale Goal/Feature above the plan that
+  contradicts it.
 
 ## Phase 4 — Fill the Test Plan (KEP format)
 
@@ -76,6 +82,9 @@ code solid enough prior to committing the changes necessary to implement this en
 1. Present the proposed spec changes (enriched Design Details + filled Test Plan) for **human review**.
 2. **Wait for explicit user confirmation** — this is the one pivotal question of the command.
 3. On approval, write the changes back to the spec file. **Modify no other file.**
-4. Confirm the saved path. Ensure the final spec reads cleanly top-to-bottom — clear, logical, self-consistent.
-5. **Ask the user whether to run `/my-build` now.** If yes, remind them `/my-build` runs on **opus** — for a
-   full multi-turn build session, run `/model opus` first — then continue with this spec as its target.
+4. Confirm the saved path. **Consistency check:** read Goals / Features / User Stories against the
+   Implementation Plan you just wrote; reconcile any upstream statement the plan now contradicts before
+   finalizing. The spec must read cleanly top-to-bottom — clear, logical, self-consistent.
+5. **Ask the user whether to run `/my-build` now.** `/my-build` starts on **opus** via its frontmatter, but that
+   only covers the command's first turn — for a full multi-turn build session, suggest `/model opus` first so the
+   whole session stays on opus. Then continue with this spec as its target.

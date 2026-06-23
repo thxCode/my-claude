@@ -11,32 +11,24 @@ Start spec-driven development for: **$ARGUMENTS**
 Work through the phases below in order. Each phase gates the next — do not skip ahead.
 Ask the user only when the judgment is genuinely pivotal; infer the rest from context.
 
-**Language convention.** Two distinct channels — keep them separate:
-- **Talking to the user** (questions, confirmations, summaries, status) → use the user's configured language.
-- **Writing the spec** (every field of the spec file written to `specs/`) → write the content in **English**,
-  regardless of the conversation language.
+**Language.** Talk to the user in their configured language; write every field of the spec in **English**.
 
-**Source lookup.** When you need to read or trace existing source code, consult sources in this order:
-**GitNexus** (if available) → **DeepWiki** → `grep` / `find`.
+**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
+
+**Planning mindset.** Plan deliberately, not in a race:
+- See clearly first — read what the requirement says *and* the current code before deciding anything.
+- Write down both what you're sure of and what you're not; revisit and adjust as you learn — no one-shot perfect pass.
+- Keep the spec legible to both of us. Resolve uncertainty with a test where you can; otherwise ask.
+- After each new piece, re-read the earlier parts so the whole stays self-consistent with nothing left out.
 
 ## Phase 1 — Gather context
 
-**1a. Understand the project (Context).**
-- If an `overview` skill is available, invoke it to understand the project.
-- Otherwise, read the project's own docs: `README.md`, `CLAUDE.md`, and `docs/**/*.md`.
+Build enough understanding to write a grounded spec, following the **Source lookup** order above:
 
-**1b. Understand the code (Code).**
-- If the `gitnexus-exploring` skill is available, invoke it.
-  - If exploration fails or returns nothing (index missing/stale), **ask permission**, then run the command below and retry:
-    ```bash
-    gitnexus analyze --index-only --embeddings
-    ```
-- If `gitnexus-exploring` is not available, use the `search-first` skill instead.
-- If context is still insufficient at any point, prefer the `search-first` skill to dig deeper.
-
-**1c. Understand external libraries / frameworks.**
-- When a library or framework not in the project's dependency tree surfaces, consult the **DeepWiki MCP** for
-  its docs.
+- **Project** — invoke an `overview` skill if available; else read `README.md`, `CLAUDE.md`, `docs/**/*.md`.
+- **Code** — explore via `gitnexus-exploring` if available, else `search-first`. If GitNexus returns nothing
+  (index missing/stale), **ask permission**, run `gitnexus analyze --index-only --embeddings`, then retry.
+- **External libs/frameworks** not in the dependency tree — consult **DeepWiki**.
 
 ## Phase 2 — Judge intent, then route
 
@@ -70,8 +62,8 @@ fix** (something is broken)? Infer it; anything that isn't a clear bug takes the
 
 ## Phase 3 — Clarify the five areas
 
-Driven by `agent-skills:spec-driven-development`. Make sure all five are nailed down before writing the spec —
-**skip any already answered by Phase 2; don't re-ask**:
+Nail down all five before writing — **skip any already answered by Phase 2; don't re-ask**. The rule is
+spec-before-code: pin down *what* and *why* now, leave *how* to `/my-plan`.
 
 1. **Objective & target users**
 2. **Core features & acceptance criteria**
@@ -81,9 +73,9 @@ Driven by `agent-skills:spec-driven-development`. Make sure all five are nailed 
 
 ## Phase 4 — Write the spec
 
-Produce a structured spec covering all six core areas — **Objective, Commands, Project Structure, Code Style,
-Testing Strategy, Boundaries** — in the KEP-style template below. Leave **Implementation Plan** and **Test
-Plan** as placeholders; `/my-plan` completes them. No leftover placeholders except those two TODOs.
+Fill in the KEP-style template below — it *is* the coverage checklist; every section must be addressed.
+Leave **Implementation Plan** and **Test Plan** as placeholders; `/my-plan` completes them. No leftover
+placeholders except those two TODOs.
 
 ```markdown
 # Spec: <Title>
@@ -118,7 +110,7 @@ As a <user>, I want <capability>, so that <benefit>.
 - **Never:** <…>
 
 ### Risks and Mitigations
-<Key risks and how they're mitigated.>
+<Key risks, each as `Risk → Mitigation`.>
 
 ## Design Details
 ### Commands
@@ -143,5 +135,7 @@ As a <user>, I want <capability>, so that <benefit>.
 
 1. Derive a short, **hyphen-separated** title from the spec (e.g. `user-auth-flow`).
 2. **Present the drafted spec and its title; wait for confirmation** — this is your approval to write.
-3. Save to `specs/<title>.md` (create the `specs/` directory if it doesn't exist). Confirm the saved path.
+3. Save to `specs/<title>.md` (create the `specs/` directory if it doesn't exist). **If a spec with that title
+   already exists, don't overwrite silently** — ask the user: overwrite, pick a new title, or switch to
+   `/my-plan` on the existing one. Confirm the saved path.
 4. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.
