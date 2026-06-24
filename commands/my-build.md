@@ -18,8 +18,9 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 
 ## Phase 1 — Resolve the spec
 
-1. Resolve the target spec from `$ARGUMENTS` (a title → `specs/<title>.md`; a path → use it; empty → if
-   `specs/` holds one spec use it, else list them and ask which).
+1. Resolve the target spec from `$ARGUMENTS` (a path/full filename → use as-is; a bare title → match
+   `specs/*-<title>.md`, the prefix being a date or issue number, or a legacy `specs/<title>.md`, asking which if
+   several match; empty → if `specs/` holds one spec use it, else list them and ask which).
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it
    now). Do not invent requirements.
 3. **If the spec isn't planned yet** — the Implementation Plan still shows its `> TODO` (no `[ ]` tasks), or

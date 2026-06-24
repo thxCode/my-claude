@@ -1,14 +1,20 @@
 *
 
-!commands/my-*
+!commands/
+!commands/my-build.md
+!commands/my-plan.md
+!commands/my-ship.md
+!commands/my-spec-from-issue.md
+!commands/my-spec.md
+
 
 !skills/
 !skills/search-first/
 !skills/address-pr-review/
 !skills/auto-research/
 !skills/auto-research/**
-!statusline-command.sh
 
 /CLAUDE.md
 /LICENSE
 /README.md
+!statusline-command.sh

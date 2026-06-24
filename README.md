@@ -66,7 +66,8 @@ claude plugin install codex@openai-codex
 
 Custom slash commands live in [`commands/`](commands).
 
-- **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec to `specs/<title>.md`.
+- **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec to `specs/<yyyy-mm-dd>-<title>.md`.
+- **`/my-spec-from-issue [github issue number or URL]`** — Issue-driven entry to the spec family: reads a GitHub issue (body + comments) from the current repo's upstream, distills it into a requirement, then hands off to `/my-spec` carrying the issue number — saving the spec as `specs/<issue-number>-<title>.md`.
 - **`/my-plan [spec title]`** — Deepens a spec's Design Details and fills its Test Plan (KEP format) via task breakdown; after your review, writes back the spec only.
 - **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions); confirms and commits after each task.
 - **`/my-ship [spec title]`** — Finalizes a spec: optional e2e tests (writing fixes back to spec + the cheapest appropriate test coverage), refreshes the overview, and updates docs/ADRs; conforms to project conventions.

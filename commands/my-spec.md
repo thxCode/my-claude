@@ -140,8 +140,13 @@ As a <user>, I want <capability>, so that <benefit>.
 ## Phase 5 — Save, then offer to plan
 
 1. Derive a short, **hyphen-separated** title from the spec (e.g. `user-auth-flow`).
-2. **Present the drafted spec and its title; wait for confirmation** — this is your approval to write.
-3. Save to `specs/<title>.md` (create the `specs/` directory if it doesn't exist). **If a spec with that title
+2. **Pick the filename prefix** so specs sort sensibly in `specs/`:
+   - **Issue-initiated** — if this spec was started from a GitHub issue (an issue number is in context, e.g.
+     handed off by `/my-spec-from-issue`), use that **issue number** → `specs/<issue-number>-<title>.md`. Also
+     record the issue link in the spec (Summary or Motivation).
+   - **Otherwise** — use **today's date** from `date +%Y-%m-%d` → `specs/<yyyy-mm-dd>-<title>.md`.
+3. **Present the drafted spec and its filename; wait for confirmation** — this is your approval to write.
+4. Save to `specs/<prefix>-<title>.md` (create the `specs/` directory if it doesn't exist). **If that file
    already exists, don't overwrite silently** — ask the user: overwrite, pick a new title, or switch to
    `/my-plan` on the existing one. Confirm the saved path.
-4. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.
+5. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.

@@ -23,7 +23,9 @@ This command **only ever writes back the one spec file** — it makes no other e
 ## Phase 1 — Resolve the spec
 
 1. Resolve the target spec from `$ARGUMENTS`:
-   - A title → `specs/<title>.md`; a path → use it as-is.
+   - A path or full filename → use it as-is.
+   - A bare title → match `specs/*-<title>.md` (specs are prefixed with a date or an issue number); also accept
+     a legacy `specs/<title>.md`. If several match, list them and ask which.
    - If `$ARGUMENTS` is empty: if `specs/` holds exactly one spec, use it; otherwise list them and ask which.
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it first (offer to run
    `/my-spec` now). Do not fabricate a spec here.
