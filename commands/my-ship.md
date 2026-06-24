@@ -59,7 +59,12 @@ an altered data flow:
    descriptive messages. **If nothing changed, skip the commit and say so.**
 4. **Ask whether to push the branch and open a PR** (use the spec's Summary + completed task list as the PR
    body). If yes, push and create it.
-5. **Mark the spec's terminal state.** Add (or update) a `Status:` line just under the spec's title —
-   `Status: Shipped` plus the PR link if one was opened. This leaves the spec carrying its own lifecycle trace.
-   Write this back in **English**, modifying only the spec file.
-6. Summarize what shipped and anything left for the user.
+5. **Mark the spec's terminal state.** Update the `Status:` line just under the spec's title (carried forward
+   from `/my-build`'s `Built`) to `Status: Shipped` plus the PR link if one was opened — `Status: Shipped — <PR link>`.
+   Add the line if a legacy spec lacks it. This leaves the spec carrying its own lifecycle trace. Write this back
+   in **English**, modifying only the spec file.
+6. **Refresh the GitNexus knowledge graph** (only if the project uses GitNexus). Invoke the `gitnexus-cli` skill to
+   run `analyze --index-only --embeddings`, bringing the graph in sync with the shipped code. Run it
+   unconditionally — no permission prompt. `--index-only` keeps this a pure index pass: it does **not** generate
+   skills and does **not** touch `CLAUDE.md` / `AGENTS.md`.
+7. Summarize what shipped and anything left for the user.

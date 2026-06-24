@@ -27,7 +27,8 @@ Build enough understanding to write a grounded spec, following the **Source look
 
 - **Project** — invoke an `overview` skill if available; else read `README.md`, `CLAUDE.md`, `docs/**/*.md`.
 - **Code** — explore via `gitnexus-exploring` if available, else `search-first`. If GitNexus returns nothing
-  (index missing/stale), **ask permission**, run `gitnexus analyze --index-only --embeddings`, then retry.
+  (index missing/stale), **ask permission**, then invoke the `gitnexus-cli` skill to run
+  `analyze --index-only --embeddings`, and retry.
 - **External libs/frameworks** not in the dependency tree — consult **DeepWiki**.
 
 ## Phase 2 — Judge intent, then route
@@ -77,8 +78,13 @@ Fill in the KEP-style template below — it *is* the coverage checklist; every s
 Leave **Implementation Plan** and **Test Plan** as placeholders; `/my-plan` completes them. No leftover
 placeholders except those two TODOs.
 
+The `Status:` line under the title is the spec's lifecycle trace — initial value `Specified`, later advanced by
+`/my-plan` → `/my-build` → `/my-ship` (`Specified → Planned → Building → Built → Shipped`).
+
 ```markdown
 # Spec: <Title>
+
+Status: Specified
 
 ## Summary
 <One release-note-style paragraph: what we're building/fixing and why.>

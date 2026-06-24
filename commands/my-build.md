@@ -24,7 +24,8 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
    now). Do not invent requirements.
 3. **If the spec isn't planned yet** — the Implementation Plan still shows its `> TODO` (no `[ ]` tasks), or
    the Test Plan still has a `TODO` or any `<…>` placeholder — recommend running `/my-plan` first, and ask
-   before proceeding.
+   before proceeding. Judge this from **content**, not the `Status:` line: that line is a lifecycle trace, not a
+   gating signal; if it contradicts the content, trust the content and fix the line in passing.
 
 ## Phase 2 — Set the baseline & route skills
 
@@ -46,7 +47,8 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 
 Take the next pending task from the Implementation Plan and do **one** task:
 
-1. Read its acceptance criteria; load the relevant existing code, patterns, and types.
+1. Read its acceptance criteria; load the relevant existing code, patterns, and types. On the first task, if the
+   spec's `Status:` is still `Planned`, flip it to `Building` — this write lands with this task's commit (Phase 5.2).
 2. **TDD:** write a failing test (RED) → implement the minimum to pass (GREEN) → run the full suite for
    regressions → run the build.
 3. **Conform to conventions:** follow the spec's Code Style & Boundaries and `CLAUDE.md`; match the
@@ -74,8 +76,10 @@ Before committing the task, review at a depth that matches the task's risk:
 ## Phase 5 — Confirm, commit, then continue
 
 1. When the task is reviewed and verified, **present it to the user and wait for confirmation.**
-2. On confirmation, **check off the task `[x]`** in the spec's Implementation Plan, then **commit** — staging
-   only this task's files plus that spec change — with a descriptive message.
-3. Return to Phase 3 for the next pending task. When all tasks are done, **summarize:** tasks completed, tests
-   added, commits made, and anything skipped, flagged, or left for the user.
+2. On confirmation, **check off the task `[x]`** in the spec's Implementation Plan and **advance the `Status:`
+   line in the same edit** — `Building` while tasks remain, or `Built` if this was the last one — then **commit**,
+   staging only this task's files plus that spec change, with a descriptive message. (Status rides the task
+   commit; no separate Status-only commit.)
+3. Return to Phase 3 for the next pending task. When all tasks are done (spec `Status:` now `Built`),
+   **summarize:** tasks completed, tests added, commits made, and anything skipped, flagged, or left for the user.
 4. **Ask the user whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this spec as its target.

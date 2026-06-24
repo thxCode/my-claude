@@ -27,6 +27,9 @@ This command **only ever writes back the one spec file** — it makes no other e
    - If `$ARGUMENTS` is empty: if `specs/` holds exactly one spec, use it; otherwise list them and ask which.
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it first (offer to run
    `/my-spec` now). Do not fabricate a spec here.
+3. The `Status:` line under the title is a lifecycle trace, **not** a gating signal — judge state from content
+   (the spec exists; its Plan/Test placeholders). If `Status:` contradicts the content, trust the content and
+   fix the line in passing.
 
 ## Phase 2 — Re-ground (read-only)
 
@@ -81,7 +84,8 @@ code solid enough prior to committing the changes necessary to implement this en
 
 1. Present the proposed spec changes (enriched Design Details + filled Test Plan) for **human review**.
 2. **Wait for explicit user confirmation** — this is the one pivotal question of the command.
-3. On approval, write the changes back to the spec file. **Modify no other file.**
+3. On approval, write the changes back to the spec file, and **set the `Status:` line under the title to
+   `Planned`** (add it just under the title if missing). **Modify no other file.**
 4. Confirm the saved path. **Consistency check:** read Goals / Features / User Stories against the
    Implementation Plan you just wrote; reconcile any upstream statement the plan now contradicts before
    finalizing. The spec must read cleanly top-to-bottom — clear, logical, self-consistent.
