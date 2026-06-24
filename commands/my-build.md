@@ -68,10 +68,12 @@ Before committing the task, review at a depth that matches the task's risk:
    acceptance criteria, edge cases handled), readability, convention conformance (Code Style / Boundaries /
    `CLAUDE.md` / surrounding code), and security.
 2. **Heavy task → full review.** When the task changed **exported/shared symbols**, is flagged as a **Risk**, or
-   is a **large change**, escalate to `agent-skills:code-review-and-quality` (five-axis review). At the same
-   threshold, if `gitnexus-impact-analysis` is available, run one round on the changed symbols — what depends on
-   them, what could break.
-3. If review or impact analysis surfaces problems, fix them (back to Phase 3) before moving on.
+   is a **large change**, escalate to `open-code-review:review` — it runs the `ocr` CLI on this task's working-copy
+   diff (changes aren't committed until Phase 5) and may apply fixes autonomously. At the same threshold, if
+   `gitnexus-impact-analysis` is available, run one round on the changed symbols — what depends on them, what
+   could break.
+3. If review or impact analysis surfaces problems, address them — the `open-code-review:review` skill may apply
+   fixes itself; otherwise fix them — then re-verify (back to Phase 3) before moving on.
 
 ## Phase 5 — Confirm, commit, then continue
 

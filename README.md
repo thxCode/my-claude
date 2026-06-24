@@ -42,7 +42,18 @@ claude plugin marketplace add addyosmani/agent-skills
 claude plugin install agent-skills@addy-agent-skills
 ```
 
-### 5. Codex plugin (optional)
+### 5. open-code-review plugin
+
+AI-powered code review CLI (`ocr`); used by `/my-build` for heavy-task review.
+
+```bash
+claude plugin marketplace add alibaba/open-code-review
+claude plugin install open-code-review@open-code-review
+```
+
+> The review skill needs the `ocr` CLI and an LLM configured — on first review it self-checks and guides `npm i -g @alibaba-group/open-code-review` + `ocr llm test`. See [alibaba/open-code-review](https://github.com/alibaba/open-code-review).
+
+### 6. Codex plugin (optional)
 
 Hand off or cross-check tasks with OpenAI Codex from inside Claude Code (e.g. the `codex:codex-rescue` agent).
 
