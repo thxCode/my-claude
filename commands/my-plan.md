@@ -38,7 +38,10 @@ This command **only ever writes back the one spec file** — it makes no other e
 1. **Stay strictly read-only** — the only write permitted is the final spec write-back in Phase 5.
 2. Re-read the spec end-to-end.
 3. Re-ground the design in the real codebase: use `gitnexus-exploring` if available, else `search-first`.
-   For external libraries/frameworks not in the dependency tree, consult the **DeepWiki MCP**.
+   For external libraries/frameworks not in the dependency tree, consult the **DeepWiki MCP**; for a
+   JavaScript-rendered doc/site DeepWiki can't reach, fetch it as markdown via `crawl4ai-search`. For a
+   **frontend** spec, a screenshot of the current rendered screen (`crawl4ai-search`) is good grounding —
+   writing a PNG to the scratchpad keeps this phase read-only on project files.
 
 ## Phase 3 — Plan the implementation (Design Details)
 

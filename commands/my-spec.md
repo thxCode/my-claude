@@ -29,7 +29,9 @@ Build enough understanding to write a grounded spec, following the **Source look
 - **Code** — explore via `gitnexus-exploring` if available, else `search-first`. If GitNexus returns nothing
   (index missing/stale), **ask permission**, then invoke the `gitnexus-cli` skill to run
   `analyze --index-only --embeddings`, and retry.
-- **External libs/frameworks** not in the dependency tree — consult **DeepWiki**.
+- **External libs/frameworks** not in the dependency tree — consult **DeepWiki**; for a JavaScript-rendered
+  doc/site DeepWiki can't reach, fetch it as markdown via `crawl4ai-search`. For a spec documenting existing
+  UI, a screenshot of the current screen (`crawl4ai-search`) is good grounding evidence.
 
 ## Phase 2 — Judge intent, then route
 

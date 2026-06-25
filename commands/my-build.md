@@ -42,7 +42,9 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
      if available.
    - **API / interface design** needed → `agent-skills:api-and-interface-design`.
    - **Risk items** (flagged in the spec's Risks and Mitigations) → `agent-skills:doubt-driven-development`.
-   - **Frontend / UI** work → `agent-skills:frontend-ui-engineering`.
+   - **Frontend / UI** work → `agent-skills:frontend-ui-engineering`. For a **rendered screenshot** (render
+     check, responsive viewports, a component shot) → `crawl4ai-search`; for **interactive** debugging (clicks,
+     console, network) → `agent-skills:browser-testing-with-devtools`.
 
 ## Phase 3 — Build the next task (loop)
 

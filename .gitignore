@@ -11,6 +11,8 @@
 !skills/
 !skills/search-first/
 !skills/address-pr-review/
+!skills/crawl4ai-search/
+!skills/crawl4ai-search/**
 !skills/auto-research/
 !skills/auto-research/**
 

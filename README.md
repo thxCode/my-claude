@@ -62,6 +62,16 @@ claude plugin marketplace add openai/codex-plugin-cc
 claude plugin install codex@openai-codex
 ```
 
+### 7. crawl4ai (optional)
+
+Local web crawler powering the `crawl4ai-search` skill — fetch pages as clean Markdown and screenshot rendered UIs. Provides the `crwl` CLI.
+
+```bash
+uv pip install crawl4ai --system
+crawl4ai-setup
+crawl4ai-doctor
+```
+
 ## Commands
 
 Custom slash commands live in [`commands/`](commands).
@@ -79,6 +89,7 @@ Custom skills live in [`skills/`](skills); Claude invokes them automatically whe
 - **`search-first`** — Research-before-coding workflow: searches for existing tools, libraries, and patterns before writing custom code, so you reuse instead of reinventing. Invokes the researcher agent.
 - **`address-pr-review`** — Consumes the review comments **already left** on a PR: triages each one against the source (real bug vs. false positive), fixes the real ones surgically, folds the fixes into the right commit to keep history clean, then replies to / resolves the threads. The counterpart to skills that *generate* a review.
 - **`auto-research`** — Autonomous research harness: decomposes a topic, fans out web searches, adversarially verifies every claim against its source, then synthesizes a Perplexity-style cited report at `.claude/reports/<title>.md`. Cost-aware (throttles on rate-limit usage) and observable (per-round digest). After showing the plan it runs unattended (**auto mode**) or pauses for per-round approval (**manual-approve mode**).
+- **`crawl4ai-search`** — Fetches web pages as clean, token-efficient Markdown (`md-fit` + BM25 filter) and screenshots rendered UIs via the local [crawl4ai](#7-crawl4ai-optional) (`crwl` CLI + a small SDK script). Used in place of `WebFetch` for JavaScript-rendered/content-dense pages and by `auto-research` workers for distilled fetches; supplies frontend render/responsive/component screenshots while delegating interactive debugging to `agent-skills:browser-testing-with-devtools`. Requires the optional crawl4ai install above.
 
 
 ## License
