@@ -1,7 +1,6 @@
 ---
 description: Finalize a spec — optional e2e tests (fixes written back), refresh the overview, update docs/ADRs; conforms to project conventions
 argument-hint: [spec title or path]
-model: sonnet
 ---
 
 # /my-ship

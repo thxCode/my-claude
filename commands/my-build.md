@@ -1,7 +1,6 @@
 ---
 description: Implement a spec's Design Details task by task — TDD + incremental, conforming to project conventions, confirm & commit per task
 argument-hint: [spec title or path]
-model: opus
 ---
 
 # /my-build

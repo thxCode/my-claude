@@ -1,7 +1,6 @@
 ---
 description: Refine a spec's Design Details and fill its Test Plan (KEP format) via task breakdown — writes back the spec only
 argument-hint: [spec title or path]
-model: opus
 ---
 
 # /my-plan
@@ -94,6 +93,4 @@ code solid enough prior to committing the changes necessary to implement this en
 4. Confirm the saved path. **Consistency check:** read Goals / Features / User Stories against the
    Implementation Plan you just wrote; reconcile any upstream statement the plan now contradicts before
    finalizing. The spec must read cleanly top-to-bottom — clear, logical, self-consistent.
-5. **Ask the user whether to run `/my-build` now.** `/my-build` starts on **opus** via its frontmatter, but that
-   only covers the command's first turn — for a full multi-turn build session, suggest `/model opus` first so the
-   whole session stays on opus. Then continue with this spec as its target.
+5. **Ask the user whether to run `/my-build` now. Then continue with this spec as its target.

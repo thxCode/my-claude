@@ -1,7 +1,6 @@
 ---
 description: Spec-driven development — gather context, judge intent, then write a KEP-style spec to specs/
 argument-hint: [what you want to build or fix]
-model: opus
 ---
 
 # /my-spec

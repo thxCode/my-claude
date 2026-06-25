@@ -1,7 +1,6 @@
 ---
 description: Start spec-driven development from a GitHub issue — read the issue, then hand off to /my-spec carrying the issue number
 argument-hint: [github issue number or URL]
-model: opus
 ---
 
 # /my-spec-from-issue
