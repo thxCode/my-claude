@@ -1,5 +1,5 @@
 ---
-description: Implement a spec's Design Details task by task — TDD + incremental, conforming to project conventions, confirm & commit per task
+description: Implement a spec's Design Details task by task — TDD + incremental, conforming to project conventions; commit per task (confirm each, or auto-chain in auto/bypass mode), then a full end-of-build review
 argument-hint: [spec title or path]
 ---
 
@@ -17,9 +17,11 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 
 ## Phase 1 — Resolve the spec
 
-1. Resolve the target spec from `$ARGUMENTS` (a path/full filename → use as-is; a bare title → match
-   `specs/*-<title>.md`, the prefix being a date or issue number, or a legacy `specs/<title>.md`, asking which if
-   several match; empty → if `specs/` holds one spec use it, else list them and ask which).
+1. **First strip an optional `auto` token** from `$ARGUMENTS` (it selects the run mode in Phase 2, not the
+   spec) — the remainder is the spec selector. Resolve the target spec from that remainder (a path/full
+   filename → use as-is; a bare title → match `specs/*-<title>.md`, the prefix being a date or issue number, or
+   a legacy `specs/<title>.md`, asking which if several match; empty → if `specs/` holds one spec use it, else
+   list them and ask which).
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it
    now). Do not invent requirements.
 3. **If the spec isn't planned yet** — the Implementation Plan still shows its `> TODO` (no `[ ]` tasks), or
@@ -33,10 +35,17 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 2. **Establish a clean git baseline.** Run `git status --porcelain`; if there are unrelated uncommitted
    changes, ask the user how to handle them before per-task commits. If on the default branch, create a
    feature branch named after the spec title first.
-3. **Backbone for the whole build (inline discipline):** work one vertical task at a time, never a big-bang
+3. **Decide the run mode for this build:**
+   - **Auto-chain** — when the session is in `acceptEdits` (auto-accept) or `bypassPermissions` mode, **or** the
+     `auto` token was passed (Phase 1.1). Tasks run one after another with no per-task confirmation; the only
+     stop is the final review (Phase 5.4).
+   - **Per-task confirm** (default) — every other case. Each task pauses for your confirmation before commit.
+
+   State the chosen mode in your first message so it's on the record.
+4. **Backbone for the whole build (inline discipline):** work one vertical task at a time, never a big-bang
    change; for each, drive with TDD — write a failing test first (RED), implement the minimum to pass (GREEN),
    then keep the suite green. Detailed loop in Phase 3.
-4. **Extra skills, engaged by the nature of each task:**
+5. **Extra skills, engaged by the nature of each task:**
    - **Refactoring** (rename / extract / split / move / restructure) → invoke `gitnexus-refactoring` **first**
      if available.
    - **API / interface design** needed → `agent-skills:api-and-interface-design`.
@@ -79,11 +88,38 @@ Before committing the task, review at a depth that matches the task's risk:
 
 ## Phase 5 — Confirm, commit, then continue
 
-1. When the task is reviewed and verified, **present it to the user and wait for confirmation.**
-2. On confirmation, **check off the task `[x]`** in the spec's Implementation Plan and **advance the `Status:`
-   line in the same edit** — `Building` while tasks remain, or `Built` if this was the last one — then **commit**,
-   staging only this task's files plus that spec change, with a descriptive message. (Status rides the task
-   commit; no separate Status-only commit.)
+1. **Gate by run mode** (set in Phase 2.3) once the task is reviewed and verified:
+   - **Per-task confirm** — **present the task to the user and wait for confirmation** before committing.
+   - **Auto-chain** — skip the pause; proceed straight to the commit below and on to the next task.
+2. **Check off the task `[x]`** in the spec's Implementation Plan and **advance the `Status:` line in the same
+   edit** — `Building` while tasks remain, or `Built` if this was the last one — then **commit with `-s`
+   (`--signoff`)**, staging only this task's files plus that spec change. (Status rides the task commit; no
+   separate Status-only commit.) Use this message shape — lowercase title, bullet body (a list, not prose; each
+   bullet one simple, clear point), and a task trailer; let `-s` append the `Signed-off-by:` line itself, never
+   hand-write it:
+
+   ```
+   <title, always lowercase>
+
+   - <change, one simple point per bullet>
+   - ...
+
+   Task <task index> of <spec name>.
+
+   ```
+
+   `<task index>` is the task's ordinal in the Implementation Plan; `<spec name>` is the spec's hyphenated title
+   (e.g. `Task 3 of user-auth-flow`).
 3. Return to Phase 3 for the next pending task. When all tasks are done (spec `Status:` now `Built`),
    **summarize:** tasks completed, tests added, commits made, and anything skipped, flagged, or left for the user.
-4. **Ask the user whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this spec as its target.
+4. **End-of-build review** (runs in both modes — auto-chain only skips the *per-task* gate, not this one):
+   1. **Let the user review the changes.** Present an overall diff overview and ask whether anything needs
+      further adjustment. If so, return to Phase 3, fix it, then come back here.
+   2. **Full code retrospective** — run `/agent-skills:review` over the whole build (correctness, readability,
+      architecture, security, performance).
+   3. **Codex cross-check (conditional)** — if codex is installed locally (verify via `codex:setup`), also run
+      `/codex:review` (read-only review, applies no fixes) for an independent pass. If codex isn't available,
+      skip it and say so.
+   4. **Address findings** — fix the real issues the reviews surface and re-verify (back to Phase 3) before
+      finalizing.
+5. **Ask the user whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this spec as its target.
