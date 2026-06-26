@@ -38,7 +38,8 @@ Phase 2 judges that itself.
 
 Invoke `/my-spec` with the distilled requirement as its arguments, and **carry the issue number into context** so
 that, at its save step, `/my-spec`:
-- saves the spec as `specs/<issue-number>-<title>.md` (issue-number prefix, not the date), and
+- saves the spec as `<dir>/<issue-number>-<title>.md` (issue-number prefix, not the date — `<dir>` is `specs/`
+  or `.claude/specs/`, per the tracking mode `/my-spec` asks for at its save step), and
 - records the issue link in the spec's Summary/Motivation.
 
 From here the normal `/my-spec` phases run to completion.

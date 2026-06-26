@@ -18,10 +18,10 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 ## Phase 1 — Resolve the spec
 
 1. **First strip an optional `auto` token** from `$ARGUMENTS` (it selects the run mode in Phase 2, not the
-   spec) — the remainder is the spec selector. Resolve the target spec from that remainder (a path/full
-   filename → use as-is; a bare title → match `specs/*-<title>.md`, the prefix being a date or issue number, or
-   a legacy `specs/<title>.md`, asking which if several match; empty → if `specs/` holds one spec use it, else
-   list them and ask which).
+   spec) — the remainder is the spec selector. Resolve the target spec from that remainder, searching both
+   `specs/` (committed) and `.claude/specs/` (local): a path/full filename → use as-is; a bare title → match
+   `{specs,.claude/specs}/*-<title>.md`, the prefix being a date or issue number, or a legacy `<dir>/<title>.md`,
+   asking which if several match; empty → if the two dirs hold one spec use it, else list them and ask which.
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it
    now). Do not invent requirements.
 3. **If the spec isn't planned yet** — the Implementation Plan still shows its `> TODO` (no `[ ]` tasks), or
@@ -33,15 +33,18 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 
 1. Read the spec's **Design Details** — its **Implementation Plan** is your ordered task list.
 2. **Establish a clean git baseline.** Run `git status --porcelain`; if there are unrelated uncommitted
-   changes, ask the user how to handle them before per-task commits. If on the default branch, create a
-   feature branch named after the spec title first.
+   changes, ask the user how to handle them before per-task commits. Then make sure you're on the spec's
+   working branch, named from its `Type:` — **Feature → `spec/<title>`**, **Bug fix → `fix/<title>`** (`<title>`
+   is the spec's hyphenated title, without the date/issue prefix). If you're not on it, create it from the
+   default branch.
 3. **Decide the run mode for this build:**
    - **Auto-chain** — when the session is in `acceptEdits` (auto-accept) or `bypassPermissions` mode, **or** the
      `auto` token was passed (Phase 1.1). Tasks run one after another with no per-task confirmation; the only
      stop is the final review (Phase 5.4).
    - **Per-task confirm** (default) — every other case. Each task pauses for your confirmation before commit.
 
-   State the chosen mode in your first message so it's on the record.
+   State the chosen run mode — and the spec's tracking mode (committed if it's under `specs/`, local if under
+   `.claude/specs/`) — in your first message so it's on the record.
 4. **Backbone for the whole build (inline discipline):** work one vertical task at a time, never a big-bang
    change; for each, drive with TDD — write a failing test first (RED), implement the minimum to pass (GREEN),
    then keep the suite green. Detailed loop in Phase 3.
@@ -59,7 +62,7 @@ in **English**; for other artifacts (code, comments, commits, docs) follow the p
 Take the next pending task from the Implementation Plan and do **one** task:
 
 1. Read its acceptance criteria; load the relevant existing code, patterns, and types. On the first task, if the
-   spec's `Status:` is still `Planned`, flip it to `Building` — this write lands with this task's commit (Phase 5.2).
+   spec's `Status:` is still `Planned`, flip it to `Building` — this write is saved with the task in Phase 5.2.
 2. **TDD:** write a failing test (RED) → implement the minimum to pass (GREEN) → run the full suite for
    regressions → run the build.
 3. **Conform to conventions:** follow the spec's Code Style & Boundaries and `CLAUDE.md`; match the
@@ -93,10 +96,10 @@ Before committing the task, review at a depth that matches the task's risk:
    - **Auto-chain** — skip the pause; proceed straight to the commit below and on to the next task.
 2. **Check off the task `[x]`** in the spec's Implementation Plan and **advance the `Status:` line in the same
    edit** — `Building` while tasks remain, or `Built` if this was the last one — then **commit with `-s`
-   (`--signoff`)**, staging only this task's files plus that spec change. (Status rides the task commit; no
-   separate Status-only commit.) Use this message shape — lowercase title, bullet body (a list, not prose; each
-   bullet one simple, clear point), and a task trailer; let `-s` append the `Signed-off-by:` line itself, never
-   hand-write it:
+   (`--signoff`)**. Stage only this task's files; **also stage the spec edit if the spec is committed (under
+   `specs/`) — for a local spec (`.claude/specs/`) update it on disk but never stage it.** Use this message
+   shape — lowercase title, bullet body (a list, not prose; each bullet one simple, clear point), and a task
+   trailer; let `-s` append the `Signed-off-by:` line itself, never hand-write it:
 
    ```
    <title, always lowercase>

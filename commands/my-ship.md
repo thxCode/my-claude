@@ -18,9 +18,10 @@ and docs back in sync. Every change conforms to project conventions (spec **Code
 
 ## Phase 1 — Resolve the spec
 
-1. Resolve the target spec from `$ARGUMENTS` (a path/full filename → use as-is; a bare title → match
-   `specs/*-<title>.md`, the prefix being a date or issue number, or a legacy `specs/<title>.md`, asking which if
-   several match; empty → if `specs/` holds one spec use it, else list them and ask which).
+1. Resolve the target spec from `$ARGUMENTS`, searching both `specs/` (committed) and `.claude/specs/` (local):
+   a path/full filename → use as-is; a bare title → match `{specs,.claude/specs}/*-<title>.md`, the prefix being
+   a date or issue number, or a legacy `<dir>/<title>.md`, asking which if several match; empty → if the two
+   dirs hold one spec use it, else list them and ask which.
 2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it now).
 3. **Run the full test suite; it must be green before finalizing** — fix failures or surface them.
 4. **Consistency scan (read-only).** Read Goals / Features / User Stories against the completed Implementation
@@ -54,17 +55,21 @@ an altered data flow:
 ## Phase 5 — Confirm & commit
 
 1. **If any code changed in Phases 2–4, re-run the full test suite** — it must be green before committing.
-2. Present everything that changed (spec, tests, overview, docs) for **review**.
-3. On confirmation, **commit** the finalization changes (group logically; stage only what you changed) with
-   descriptive messages. **If nothing changed, skip the commit and say so.**
-4. **Ask whether to push the branch and open a PR** (use the spec's Summary + completed task list as the PR
-   body). If yes, push and create it.
-5. **Mark the spec's terminal state.** Update the `Status:` line just under the spec's title (carried forward
-   from `/my-build`'s `Built`) to `Status: Shipped` plus the PR link if one was opened — `Status: Shipped — <PR link>`.
-   Add the line if a legacy spec lacks it. This leaves the spec carrying its own lifecycle trace. Write this back
-   in **English**, modifying only the spec file.
+2. **Mark the spec's terminal state — before any PR exists.** Update the `Status:` line just under the spec's
+   title (carried forward from `/my-build`'s `Built`) to `Status: Shipped`; add the line if a legacy spec lacks
+   it. No PR link — for a committed spec (`specs/`) it must already read `Shipped` before the PR opens so the PR
+   captures it; never backfill a link afterward (a pointless extra commit). A local spec (`.claude/specs/`) takes
+   the same edit on disk but is never staged. Write this back in **English**, modifying only the spec file.
+3. Present everything that changed (spec, tests, overview, docs) for **review**.
+4. On confirmation, **commit** the finalization changes (group logically; stage only what you changed) with
+   descriptive messages. Stage the `Status: Shipped` edit **only if the spec is committed (`specs/`)** — a local
+   spec stays unstaged. **If nothing stageable remains, skip the commit and say so.**
+5. **Ask whether to push the branch and open a PR** (use the spec's Summary + completed task list as the PR
+   body). If yes, push and create it. The branch is already `Shipped`, so nothing to write back afterward.
 6. **Refresh the GitNexus knowledge graph** (only if the project uses GitNexus). Invoke the `gitnexus-cli` skill to
-   run `analyze --index-only --embeddings`, bringing the graph in sync with the shipped code. Run it
-   unconditionally — no permission prompt. `--index-only` keeps this a pure index pass: it does **not** generate
-   skills and does **not** touch `CLAUDE.md` / `AGENTS.md`.
+   run `analyze --index-only`, bringing the graph in sync with the shipped code (add `--embeddings` only on the
+   default branch; on a feature branch — where ship normally runs — omit it to preserve the default-branch
+   embeddings, which regenerate once the PR merges back). Run it unconditionally — no permission prompt.
+   `--index-only` keeps this a pure index pass: it does **not** generate skills and does **not** touch
+   `CLAUDE.md` / `AGENTS.md`.
 7. Summarize what shipped and anything left for the user.

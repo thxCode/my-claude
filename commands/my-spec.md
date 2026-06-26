@@ -26,8 +26,9 @@ Build enough understanding to write a grounded spec, following the **Source look
 
 - **Project** — invoke an `overview` skill if available; else read `README.md`, `CLAUDE.md`, `docs/**/*.md`.
 - **Code** — explore via `gitnexus-exploring` if available, else `search-first`. If GitNexus returns nothing
-  (index missing/stale), **ask permission**, then invoke the `gitnexus-cli` skill to run
-  `analyze --index-only --embeddings`, and retry.
+  (index missing/stale), **ask permission**, then invoke the `gitnexus-cli` skill to run `analyze --index-only`
+  (add `--embeddings` only on the default branch; on a feature branch omit it to preserve the default-branch
+  embeddings), and retry.
 - **External libs/frameworks** not in the dependency tree — consult **DeepWiki**; for a JavaScript-rendered
   doc/site DeepWiki can't reach, fetch it as markdown via `crawl4ai-search`. For a spec documenting existing
   UI, a screenshot of the current screen (`crawl4ai-search`) is good grounding evidence.
@@ -80,12 +81,15 @@ Leave **Implementation Plan** and **Test Plan** as placeholders; `/my-plan` comp
 placeholders except those two TODOs.
 
 The `Status:` line under the title is the spec's lifecycle trace — initial value `Specified`, later advanced by
-`/my-plan` → `/my-build` → `/my-ship` (`Specified → Planned → Building → Built → Shipped`).
+`/my-plan` → `/my-build` → `/my-ship` (`Specified → Planned → Building → Built → Shipped`). The `Type:` line
+records the Phase 2 classification (`Feature` or `Bug fix`); `/my-build` reads it to pick the branch prefix
+(`spec/` vs `fix/`).
 
 ```markdown
 # Spec: <Title>
 
 Status: Specified
+Type: <Feature | Bug fix>
 
 ## Summary
 <One release-note-style paragraph: what we're building/fixing and why.>
@@ -141,13 +145,17 @@ As a <user>, I want <capability>, so that <benefit>.
 ## Phase 5 — Save, then offer to plan
 
 1. Derive a short, **hyphen-separated** title from the spec (e.g. `user-auth-flow`).
-2. **Pick the filename prefix** so specs sort sensibly in `specs/`:
+2. **Ask the user how to track the spec** — this picks its directory:
+   - **Commit (default)** → `specs/` — the spec is versioned and its task check-offs ride `/my-build`'s commits.
+   - **Local only** → `.claude/specs/` — tracked on disk but never committed; downstream `/my-*` won't stage it.
+     `.claude/` is usually gitignored; if this project doesn't ignore it, suggest adding it.
+3. **Pick the filename prefix** so specs sort sensibly in the chosen directory:
    - **Issue-initiated** — if this spec was started from a GitHub issue (an issue number is in context, e.g.
-     handed off by `/my-spec-from-issue`), use that **issue number** → `specs/<issue-number>-<title>.md`. Also
+     handed off by `/my-spec-from-issue`), use that **issue number** → `<dir>/<issue-number>-<title>.md`. Also
      record the issue link in the spec (Summary or Motivation).
-   - **Otherwise** — use **today's date** from `date +%Y-%m-%d` → `specs/<yyyy-mm-dd>-<title>.md`.
-3. **Present the drafted spec and its filename; wait for confirmation** — this is your approval to write.
-4. Save to `specs/<prefix>-<title>.md` (create the `specs/` directory if it doesn't exist). **If that file
-   already exists, don't overwrite silently** — ask the user: overwrite, pick a new title, or switch to
-   `/my-plan` on the existing one. Confirm the saved path.
-5. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.
+   - **Otherwise** — use **today's date** from `date +%Y-%m-%d` → `<dir>/<yyyy-mm-dd>-<title>.md`.
+4. **Present the drafted spec and its filename; wait for confirmation** — this is your approval to write.
+5. Save to `<dir>/<prefix>-<title>.md` (create the directory if it doesn't exist). **If that file already
+   exists, don't overwrite silently** — ask the user: overwrite, pick a new title, or switch to `/my-plan` on
+   the existing one. Confirm the saved path.
+6. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.
