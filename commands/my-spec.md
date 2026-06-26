@@ -7,65 +7,71 @@ argument-hint: [what you want to build or fix]
 
 Start spec-driven development for: **$ARGUMENTS**
 
-Work through the phases below in order. Each phase gates the next — do not skip ahead.
-Ask the user only when the judgment is genuinely pivotal; infer the rest from context.
+```
+my-spec-from-issue ┐
+                   ├─ my-spec → my-plan → my-build → my-ship
+(direct ask) ──────┘                        ↑
+my-debug ───────────────────────────────────┘   (bug quick-fix lane)
+```
 
-**Language.** Talk to the user in their configured language; write every field of the spec in **English**.
+Work the phases **in order** — each gates the next, no skipping ahead. Ask the user only when the judgment is
+genuinely pivotal; infer the rest from context.
 
-**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-
-**Planning mindset.** Plan deliberately, not in a race:
-- See clearly first — read what the requirement says *and* the current code before deciding anything.
-- Write down both what you're sure of and what you're not; revisit and adjust as you learn — no one-shot perfect pass.
-- Keep the spec legible to both of us. Resolve uncertainty with a test where you can; otherwise ask.
-- After each new piece, re-read the earlier parts so the whole stays self-consistent with nothing left out.
+- **Language.** Talk to the user in their language; write every field of the spec in **English**.
+- **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
+- **Planning mindset** — deliberate, not a race:
+  - See clearly first — read the requirement *and* the current code before deciding.
+  - Write down what you're sure of *and* what you're not; revise as you learn (no one-shot perfect pass).
+  - Keep the spec legible; when stuck, check related past specs in `specs/` and `.claude/specs/` first; resolve
+    uncertainty with a test where you can, else ask.
+  - After each new piece, re-read the earlier parts so the whole stays self-consistent.
 
 ## Phase 1 — Gather context
 
-Build enough understanding to write a grounded spec, following the **Source lookup** order above:
+Build enough understanding to write a grounded spec (following the Source-lookup order):
 
-- **Project** — invoke an `overview` skill if available; else read `README.md`, `CLAUDE.md`, `docs/**/*.md`.
-- **Code** — explore via `gitnexus-exploring` if available, else `search-first`. If GitNexus returns nothing
-  (index missing/stale), **ask permission**, then invoke the `gitnexus-cli` skill to run
-  `analyze --index-only --embeddings`, and retry.
-- **External libs/frameworks** not in the dependency tree — consult **DeepWiki**; for a JavaScript-rendered
-  doc/site DeepWiki can't reach, fetch it as markdown via `crawl4ai-search`. For a spec documenting existing
-  UI, a screenshot of the current screen (`crawl4ai-search`) is good grounding evidence.
+- **Project** — an `overview` skill if available; else `README.md`, `CLAUDE.md`, `docs/**/*.md`.
+- **Code** — `gitnexus-exploring` if available, else `search-first`. GitNexus returns nothing (index
+  missing/stale) → **ask permission**, then `gitnexus-cli` → `analyze --index-only` (`--embeddings` only on the
+  default branch; omit on a feature branch to preserve default-branch embeddings), and retry.
+- **External libs/frameworks** not in the dependency tree — **DeepWiki**; JS-rendered doc DeepWiki can't reach →
+  `crawl4ai-search`. Documenting existing UI → a screenshot of the current screen (`crawl4ai-search`) is good
+  grounding.
 
 ## Phase 2 — Judge intent, then route
 
-Classify `$ARGUMENTS` against the context: a **Feature** (build something new / change behavior) or a **Bug
-fix** (something is broken)? Infer it; anything that isn't a clear bug takes the Feature path.
+Classify `$ARGUMENTS`: a **Feature** (build new / change behavior) or a **Bug fix** (something is broken)?
+Infer it; anything not clearly a bug takes the Feature path.
 
 ### 2A. Feature path
 
-1. **Get the user stories first.** Ask the user for their user stories (Story 1, Story 2, …). Offer drafts
-   derived from `$ARGUMENTS` + context to make it easy, but let the user provide/confirm them.
-2. **If the stories are too thin, refine them** — for the story portion only, pick one skill:
-   - `agent-skills:interview-me` — when the underlying intent isn't clear yet / not in context (extract what
-     the user actually wants, one question at a time).
-   - `agent-skills:idea-refine` — when the idea is present but vague (sharpen and stress-test it).
-   - `auto-research` — when the motivation depends on external facts the user can't supply from memory
-     (competitive analysis, prior art, market/landscape sizing). Invoke it, then fold its returned **research
-     digest** into Motivation and the stories' "so that `<benefit>`" clauses; its coverage gaps become Open
-     Questions.
-   - If the stories are already concrete, skip refinement.
-3. Carry the **finalized user stories** into Phase 3 (they pre-fill clarifying area #5 and anchor the rest).
+1. **User stories first.** Ask the user for their stories (Story 1, Story 2, …); offer drafts from `$ARGUMENTS` +
+   context to make it easy, but let the user provide/confirm.
+2. **Stories too thin → refine** (story portion only, pick one):
+
+   | Skill | When |
+   | --- | --- |
+   | `agent-skills:interview-me` | underlying intent unclear / not in context (extract it, one question at a time) |
+   | `agent-skills:idea-refine` | idea present but vague (sharpen & stress-test) |
+   | `auto-research` | motivation depends on external facts (competitive analysis, prior art, sizing) — fold its **research digest** into Motivation + stories' "so that `<benefit>`"; its gaps → Open Questions |
+
+   Stories already concrete → skip refinement.
+3. Carry the **finalized user stories** into Phase 3 (they pre-fill area #5 and anchor the rest).
 
 ### 2B. Bug-fix path
 
-1. **Stay strictly read-only** while investigating — make no edits until Phase 5.
-2. Find the root cause:
-   - If the `gitnexus-debugging` skill is available, invoke it.
-   - Otherwise, invoke `agent-skills:debugging-and-error-recovery`.
+**For a bug that warrants a versioned, tracked spec.** A **quick, local** fix should use `/my-debug` instead
+(lightweight artifact under `.claude/debugs/` → `/my-build`).
+
+1. **Stay strictly read-only** while investigating — no edits until Phase 5.
+2. Find the root cause: `gitnexus-debugging` if available, else `agent-skills:debugging-and-error-recovery`.
 3. Carry the **root-cause analysis + reproduction** into Phase 3. For a bug, Phase 3 reframes: objective = fix
-   the root cause; acceptance = the bug no longer reproduces + a regression guard; user story = the repro
-   scenario.
+   the root cause; acceptance = the bug no longer reproduces + a regression guard; user story = the repro scenario.
 
 ## Phase 3 — Clarify the five areas
 
-Nail down all five before writing — **skip any already answered by Phase 2; don't re-ask**. The rule is
-spec-before-code: pin down *what* and *why* now, leave *how* to `/my-plan`.
+Nail all five before writing — **skip any already answered by Phase 2; don't re-ask.** Rule: spec-before-code —
+pin *what* & *why* now, leave *how* to `/my-plan`.
 
 1. **Objective & target users**
 2. **Core features & acceptance criteria**
@@ -75,17 +81,19 @@ spec-before-code: pin down *what* and *why* now, leave *how* to `/my-plan`.
 
 ## Phase 4 — Write the spec
 
-Fill in the KEP-style template below — it *is* the coverage checklist; every section must be addressed.
-Leave **Implementation Plan** and **Test Plan** as placeholders; `/my-plan` completes them. No leftover
-placeholders except those two TODOs.
+Fill the KEP-style template below — it *is* the coverage checklist; address every section. Leave
+**Implementation Plan** and **Test Plan** as placeholders (`/my-plan` completes them); no other leftover
+placeholders.
 
-The `Status:` line under the title is the spec's lifecycle trace — initial value `Specified`, later advanced by
-`/my-plan` → `/my-build` → `/my-ship` (`Specified → Planned → Building → Built → Shipped`).
+Two metadata lines under the title:
+- **`Status:`** — lifecycle trace; initial `Specified`, later `Specified → Planned → Building → Built → Shipped`.
+- **`Type:`** — the Phase 2 classification (`Feature` / `Bug fix`); `/my-build` reads it to pick the branch prefix.
 
 ```markdown
 # Spec: <Title>
 
 Status: Specified
+Type: <Feature | Bug fix>
 
 ## Summary
 <One release-note-style paragraph: what we're building/fixing and why.>
@@ -140,14 +148,16 @@ As a <user>, I want <capability>, so that <benefit>.
 
 ## Phase 5 — Save, then offer to plan
 
-1. Derive a short, **hyphen-separated** title from the spec (e.g. `user-auth-flow`).
-2. **Pick the filename prefix** so specs sort sensibly in `specs/`:
-   - **Issue-initiated** — if this spec was started from a GitHub issue (an issue number is in context, e.g.
-     handed off by `/my-spec-from-issue`), use that **issue number** → `specs/<issue-number>-<title>.md`. Also
-     record the issue link in the spec (Summary or Motivation).
-   - **Otherwise** — use **today's date** from `date +%Y-%m-%d` → `specs/<yyyy-mm-dd>-<title>.md`.
-3. **Present the drafted spec and its filename; wait for confirmation** — this is your approval to write.
-4. Save to `specs/<prefix>-<title>.md` (create the `specs/` directory if it doesn't exist). **If that file
-   already exists, don't overwrite silently** — ask the user: overwrite, pick a new title, or switch to
-   `/my-plan` on the existing one. Confirm the saved path.
-5. **Ask the user whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec as its target.
+1. Derive a short, **hyphen-separated** title (e.g. `user-auth-flow`).
+2. **Ask how to track the spec** — this picks its directory:
+   - **Commit (default)** → `specs/` — versioned; task check-offs ride `/my-build`'s commits.
+   - **Local only** → `.claude/specs/` — on disk, never committed; downstream `/my-*` won't stage it. `.claude/`
+     is usually gitignored; if this project doesn't ignore it, suggest adding it.
+3. **Filename prefix** so specs sort sensibly:
+   - **Issue-initiated** (an issue number is in context, e.g. from `/my-spec-from-issue`) → `<dir>/<issue-number>-<title>.md`;
+     also record the issue link in the spec (Summary or Motivation).
+   - **Otherwise** → today's date (`date +%Y-%m-%d`) → `<dir>/<yyyy-mm-dd>-<title>.md`.
+4. **Present the drafted spec and its filename; wait for confirmation** — your approval to write.
+5. Save to `<dir>/<prefix>-<title>.md` (create the dir if missing). **File already exists → don't overwrite
+   silently** — ask: overwrite, pick a new title, or switch to `/my-plan` on the existing one. Confirm the path.
+6. **Ask whether to run `/my-plan` now.** If yes, continue into `/my-plan` with this spec.

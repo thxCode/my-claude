@@ -76,10 +76,11 @@ crawl4ai-doctor
 
 Custom slash commands live in [`commands/`](commands).
 
-- **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec to `specs/<yyyy-mm-dd>-<title>.md`.
-- **`/my-spec-from-issue [github issue number or URL]`** — Issue-driven entry to the spec family: reads a GitHub issue (body + comments) from the current repo's upstream, distills it into a requirement, then hands off to `/my-spec` carrying the issue number — saving the spec as `specs/<issue-number>-<title>.md`.
+- **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec — committed to `specs/<yyyy-mm-dd>-<title>.md`, or tracked locally (never committed) under `.claude/specs/` if you choose.
+- **`/my-spec-from-issue [github issue number or URL]`** — Issue-driven entry to the spec family: reads a GitHub issue (body + comments) from the current repo's upstream, distills it into a requirement, then hands off to `/my-spec` carrying the issue number — saving the spec as `<issue-number>-<title>.md` under the chosen tracking dir (`specs/` or `.claude/specs/`).
 - **`/my-plan [spec title]`** — Deepens a spec's Design Details and fills its Test Plan (KEP format) via task breakdown; after your review, writes back the spec only.
-- **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions); confirms and commits after each task.
+- **`/my-debug [bug description, error, or repro]`** — Lightweight bug-fix lane: reproduces and root-causes a bug (with a `codex:rescue` adversarial cross-check when it's complex), then writes a single throwaway debug artifact (Background / PoC / Root Cause / Fix Plan / Test Plan) to `.claude/debugs/<yyyy-mm-dd>-<title>.md` (always local, never committed) and hands off to `/my-build`. The quick counterpart to `/my-spec`'s tracked Bug-fix path.
+- **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions) on a dedicated branch (`spec/<title>` for features, `fix/<title>` for bug fixes); commits per task (confirm each, or auto-chain in auto/bypass mode), then runs a full end-of-build review.
 - **`/my-ship [spec title]`** — Finalizes a spec: optional e2e tests (writing fixes back to spec + the cheapest appropriate test coverage), refreshes the overview, and updates docs/ADRs; conforms to project conventions.
 
 ## Skills

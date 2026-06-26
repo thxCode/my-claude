@@ -7,38 +7,42 @@ argument-hint: [github issue number or URL]
 
 Start spec-driven development from a GitHub issue: **$ARGUMENTS**
 
-This is the issue-driven entry to the spec family (`/my-spec` → `/my-plan` → `/my-build` → `/my-ship`). Its only
-job is to **read the issue, distill it into a requirement, and hand off to `/my-spec`** carrying the issue number —
-all the real spec work happens in `/my-spec`. Don't duplicate its phases here.
+```
+my-spec-from-issue ┐
+                   ├─ my-spec → my-plan → my-build → my-ship
+(direct ask) ──────┘                        ↑
+my-debug ───────────────────────────────────┘   (bug quick-fix lane)
+```
 
-**Language.** Talk to the user in their configured language; everything written into the spec stays **English**
-(handled by `/my-spec`).
+The issue-driven entry to the spec family. Its only job: **read the issue, distill it into a requirement, hand
+off to `/my-spec`** carrying the issue number. All the real spec work happens in `/my-spec` — don't duplicate its
+phases here.
+
+**Language.** Talk to the user in their language; everything written into the spec stays **English** (handled by
+`/my-spec`).
 
 ## Phase 1 — Resolve & read the issue
 
-The upstream repo is always **GitHub**.
+Upstream is always **GitHub**.
 
-1. Resolve `owner/repo` from the current repo's `origin` remote (`git remote get-url origin`).
-2. Parse `$ARGUMENTS` into an issue number. Accept any of:
-   - a bare number — `123`
-   - `#123`
-   - a full URL — `https://github.com/<owner>/<repo>/issues/123` (the URL also **overrides** owner/repo)
-   - `owner/repo#123`
-3. Read the issue **and its comments** via `mcp__github__issue_read` (capture title, body, labels, state, and the
-   discussion). If the GitHub MCP isn't available, fall back to `gh issue view <n> --comments`.
-4. **If the issue can't be found or read, stop and report it** — don't fabricate requirements from the number alone.
+1. Resolve `owner/repo` from `origin` (`git remote get-url origin`).
+2. Parse `$ARGUMENTS` into an issue number — accept: `123`, `#123`, a full URL
+   `https://github.com/<owner>/<repo>/issues/123` (also **overrides** owner/repo), or `owner/repo#123`.
+3. Read the issue **and its comments** via `mcp__github__issue_read` (title, body, labels, state, discussion).
+   No GitHub MCP → fall back to `gh issue view <n> --comments`.
+4. **Can't find/read it → stop and report** — don't fabricate requirements from the number alone.
 
 ## Phase 2 — Distill into a requirement
 
-Condense the issue (body + the substantive comments) into one clear requirement statement: **what to build/fix and
-why**, plus any concrete acceptance hints surfaced in the thread. Don't classify feature vs. bug here — `/my-spec`
-Phase 2 judges that itself.
+Condense the issue (body + substantive comments) into one clear requirement: **what to build/fix and why**, plus
+any concrete acceptance hints in the thread. Don't classify feature vs. bug — `/my-spec` Phase 2 judges that.
 
 ## Phase 3 — Hand off to /my-spec
 
-Invoke `/my-spec` with the distilled requirement as its arguments, and **carry the issue number into context** so
-that, at its save step, `/my-spec`:
-- saves the spec as `specs/<issue-number>-<title>.md` (issue-number prefix, not the date), and
-- records the issue link in the spec's Summary/Motivation.
+Invoke `/my-spec` with the distilled requirement, **carrying the issue number into context** so at its save step
+`/my-spec`:
+- saves as `<dir>/<issue-number>-<title>.md` (issue-number prefix, not date — `<dir>` per the tracking mode it
+  asks for), and
+- records the issue link in the spec's Summary / Motivation.
 
 From here the normal `/my-spec` phases run to completion.

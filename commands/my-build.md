@@ -1,125 +1,166 @@
 ---
-description: Implement a spec's Design Details task by task — TDD + incremental, conforming to project conventions; commit per task (confirm each, or auto-chain in auto/bypass mode), then a full end-of-build review
-argument-hint: [spec title or path]
+description: Implement a spec's Design Details (or a debug artifact's Fix Plan) task by task — TDD + incremental, conforming to project conventions; commit per task (confirm each, or auto-chain in auto/bypass mode), then a full end-of-build review
+argument-hint: [spec/debug title or path]
 ---
 
 # /my-build
 
-Build from the spec: **$ARGUMENTS**
+Build the target: **$ARGUMENTS**
 
-Implement the spec's **Design Details** one task at a time. Output must conform to the project's conventions —
-the spec's **Code Style** and **Boundaries**, `CLAUDE.md`, and the surrounding code. Verify before you commit.
+```
+my-spec-from-issue ┐
+                   ├─ my-spec → my-plan → my-build → my-ship
+(direct ask) ──────┘                        ↑
+my-debug ───────────────────────────────────┘   (bug quick-fix lane)
+```
 
-**Language.** Talk to the user in their configured language; write spec edits (idea write-ins, task check-offs)
-in **English**; for other artifacts (code, comments, commits, docs) follow the project's existing conventions.
+Implement the **task list** one task at a time. Output must conform to the project's conventions — the target's
+**Code Style** & **Boundaries**, `CLAUDE.md`, and surrounding code. **Verify before you commit.**
 
-**Source lookup.** To read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
+**Target** = a **spec** (`specs/` committed, or `.claude/specs/` local) or a **debug artifact** (`.claude/debugs/`,
+always local). **Task list** = a spec's **Implementation Plan** / a debug artifact's **Fix Plan**.
 
-## Phase 1 — Resolve the spec
+- **Language.** Talk to the user in their language; write target edits (idea write-ins, task check-offs) in
+  **English**; for other artifacts (code, comments, commits, docs) follow the project's conventions.
+- **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
+- **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
+  target / `CLAUDE.md` / repo; retire what this work supersedes.
 
-1. **First strip an optional `auto` token** from `$ARGUMENTS` (it selects the run mode in Phase 2, not the
-   spec) — the remainder is the spec selector. Resolve the target spec from that remainder (a path/full
-   filename → use as-is; a bare title → match `specs/*-<title>.md`, the prefix being a date or issue number, or
-   a legacy `specs/<title>.md`, asking which if several match; empty → if `specs/` holds one spec use it, else
-   list them and ask which).
-2. **If the spec file does not exist, stop and hand back to `/my-spec`** to initialize it (offer to run it
-   now). Do not invent requirements.
-3. **If the spec isn't planned yet** — the Implementation Plan still shows its `> TODO` (no `[ ]` tasks), or
-   the Test Plan still has a `TODO` or any `<…>` placeholder — recommend running `/my-plan` first, and ask
-   before proceeding. Judge this from **content**, not the `Status:` line: that line is a lifecycle trace, not a
-   gating signal; if it contradicts the content, trust the content and fix the line in passing.
+## Phase 1 — Resolve the target
+
+1. **Strip an optional `auto` token** from `$ARGUMENTS` first (it picks the run mode in Phase 2, not the target);
+   the remainder is the selector. Resolve against `specs/`, `.claude/specs/`, **and `.claude/debugs/`**:
+   - path / full filename → use as-is.
+   - bare title → match `{specs,.claude/specs,.claude/debugs}/*-<title>.md` (prefixed by date or issue number);
+     also accept legacy `<dir>/<title>.md`. Several match → list and ask.
+   - empty → if exactly one target exists across those dirs, use it; else list and ask.
+2. **Missing file → stop and hand back** to `/my-spec` (or `/my-debug` for a bug) to initialize it. Don't invent
+   requirements.
+3. **Not planned → recommend the planner first, ask before proceeding.** Judge from **content**, not the
+   `Status:` line (a lifecycle trace; if it contradicts content, trust content and fix it in passing):
+   - **spec** not planned (Implementation Plan still `> TODO` / no `[ ]`; or Test Plan has `TODO` / any `<…>`) →
+     recommend `/my-plan`.
+   - **debug artifact** not planned (Fix Plan empty/`TODO`; or Test Plan has placeholders) → recommend `/my-debug`.
 
 ## Phase 2 — Set the baseline & route skills
 
-1. Read the spec's **Design Details** — its **Implementation Plan** is your ordered task list.
-2. **Establish a clean git baseline.** Run `git status --porcelain`; if there are unrelated uncommitted
-   changes, ask the user how to handle them before per-task commits. If on the default branch, create a
-   feature branch named after the spec title first.
-3. **Decide the run mode for this build:**
-   - **Auto-chain** — when the session is in `acceptEdits` (auto-accept) or `bypassPermissions` mode, **or** the
-     `auto` token was passed (Phase 1.1). Tasks run one after another with no per-task confirmation; the only
-     stop is the final review (Phase 5.4).
-   - **Per-task confirm** (default) — every other case. Each task pauses for your confirmation before commit.
+1. Read the target's **Design Details** — its **task list** is your ordered work.
+2. **Clean git baseline:** `git status --porcelain`; unrelated uncommitted changes → ask how to handle before
+   per-task commits.
+3. **Be on the target's working branch** (create from default branch if not). Prefix by source:
 
-   State the chosen mode in your first message so it's on the record.
-4. **Backbone for the whole build (inline discipline):** work one vertical task at a time, never a big-bang
-   change; for each, drive with TDD — write a failing test first (RED), implement the minimum to pass (GREEN),
-   then keep the suite green. Detailed loop in Phase 3.
-5. **Extra skills, engaged by the nature of each task:**
-   - **Refactoring** (rename / extract / split / move / restructure) → invoke `gitnexus-refactoring` **first**
-     if available.
-   - **API / interface design** needed → `agent-skills:api-and-interface-design`.
-   - **Risk items** (flagged in the spec's Risks and Mitigations) → `agent-skills:doubt-driven-development`.
-   - **Frontend / UI** work → `agent-skills:frontend-ui-engineering`. For a **rendered screenshot** (render
-     check, responsive viewports, a component shot) → `crawl4ai-search`; for **interactive** debugging (clicks,
-     console, network) → `agent-skills:browser-testing-with-devtools`.
+   | Target | Branch |
+   | --- | --- |
+   | Feature spec (`Type: Feature`) | `spec/<title>` |
+   | Bug-fix spec (`Type: Bug fix`) | `fix/<title>` |
+   | Debug artifact | `fix/<title>` (always) |
+
+   (`<title>` = hyphenated title, without the date/issue prefix.)
+4. **Run mode:**
+
+   | Mode | When | Stops |
+   | --- | --- | --- |
+   | **Auto-chain** | session in `acceptEdits`/`bypassPermissions`, **or** `auto` token passed | only compaction (5.3) + final review (5.5) |
+   | **Per-task confirm** (default) | every other case | pauses before each commit |
+
+   State the chosen run mode **and** the tracking mode (committed if under `specs/`; local if under
+   `.claude/specs/` or `.claude/debugs/`) in your first message.
+5. **Backbone (inline discipline):** one vertical task at a time, never big-bang; drive with TDD (RED → GREEN →
+   keep suite green; loop in Phase 3). **PoC/spike front-loaded?** (risky items ordered first) build it first;
+   if it overturns a Goal/Feature/design, reconcile the target **now** at its source (Phase 3.5) while churn is
+   cheap — keeps `/my-ship`'s history folding small.
+6. **Extra skills by task nature:**
+
+   | Task nature | Skill |
+   | --- | --- |
+   | Refactor (rename/extract/split/move) | `gitnexus-refactoring` **first** (if available) |
+   | API / interface design | `agent-skills:api-and-interface-design` |
+   | Risk item (flagged in target) | `agent-skills:doubt-driven-development` |
+   | Frontend / UI | `agent-skills:frontend-ui-engineering` |
+   | Rendered screenshot (render/responsive/component shot) | `crawl4ai-search` |
+   | Interactive UI debug (clicks/console/network) | `agent-skills:browser-testing-with-devtools` |
+7. **Confirm the build/test environment before the loop.** Read the environment the target pinned in
+   **Commands** — **local or remote** (if remote, its access method); if unpinned (older/unplanned target), ask.
+   **Smoke-check** the build/test commands run in that environment before starting — a broken environment found
+   mid-build is expensive to unwind.
 
 ## Phase 3 — Build the next task (loop)
 
-Take the next pending task from the Implementation Plan and do **one** task:
+Do **one** pending task from the task list:
 
-1. Read its acceptance criteria; load the relevant existing code, patterns, and types. On the first task, if the
-   spec's `Status:` is still `Planned`, flip it to `Building` — this write lands with this task's commit (Phase 5.2).
-2. **TDD:** write a failing test (RED) → implement the minimum to pass (GREEN) → run the full suite for
-   regressions → run the build.
-3. **Conform to conventions:** follow the spec's Code Style & Boundaries and `CLAUDE.md`; match the
-   surrounding code; run the project's lint/format commands (from the spec's Commands section).
-4. **When a spec detail is unclear or needs adjusting, ask the user** — don't guess. You may also suggest
-   delegating the question to the `codex:codex-rescue` subagent (or another model).
-5. **When the build changes the spec** — a user's new idea, *or* an implementation finding that overturns a
-   Goal / Feature / User Story / Risk — confirm it, then write it back **at the source**: fix the upstream
-   statement itself, not just the task line. Don't let a task-level resolution leave a stale Goal/Feature above
-   it. Then continue building against the reconciled spec.
+1. Read its acceptance criteria; load relevant existing code, patterns, types. On the **first** task, if
+   `Status:` is still `Planned` (spec) / `Diagnosed` (debug), flip it to `Building` — saved with the task in 5.2.
+2. **TDD:** failing test (RED) → minimum to pass (GREEN) → full suite (regressions) → build.
+3. **Conform:** follow Code Style & Boundaries + `CLAUDE.md`; match surrounding code; run lint/format (from
+   Commands).
+4. **Simplicity & readability discipline (continuous, while coding — never overrides `CLAUDE.md`):**
+   - **Decision ladder before writing** — need this at all? → codebase already has it? → standard library? →
+     native platform feature? → an installed dependency covers it? → can it be one line? → *then* minimal
+     working code. **Deletion over addition; boring over clever.**
+   - **Simplify anti-patterns** — deep nesting → guard clauses / extract; long function → split by
+     responsibility; nested ternary → if/else; generic names → descriptive; duplicated logic → shared function;
+     dead code → remove after confirming.
+   - **Never simplify away** — input validation, data-loss-preventing error handling, security, accessibility,
+     explicitly requested features.
+   - **Heavy/at-scale simplification** → escalate to `agent-skills:code-simplification` (in Phase 4 review or
+     end-of-build).
+5. **Unclear spec detail → ask the user** (don't guess); you may delegate the question to `codex:codex-rescue`
+   (or another model).
+6. **Build changes the target?** (a new idea, or a finding that overturns a Goal / Feature / User Story / Risk)
+   — confirm, then write it back **at the source** (fix the upstream statement, not just the task line). Then
+   continue against the reconciled target.
 
 ## Phase 4 — Review & impact analysis
 
-Before committing the task, review at a depth that matches the task's risk:
+Depth matches the task's risk:
 
-1. **Routine task → inline self-review.** Check this task's diff on four axes: correctness (does it meet the
-   acceptance criteria, edge cases handled), readability, convention conformance (Code Style / Boundaries /
-   `CLAUDE.md` / surrounding code), and security.
-2. **Heavy task → full review.** When the task changed **exported/shared symbols**, is flagged as a **Risk**, or
-   is a **large change**, escalate to `open-code-review:review` — it runs the `ocr` CLI on this task's working-copy
-   diff (changes aren't committed until Phase 5) and may apply fixes autonomously. At the same threshold, if
-   `gitnexus-impact-analysis` is available, run one round on the changed symbols — what depends on them, what
-   could break.
-3. If review or impact analysis surfaces problems, address them — the `open-code-review:review` skill may apply
-   fixes itself; otherwise fix them — then re-verify (back to Phase 3) before moving on.
+1. **Routine → inline self-review** on four axes: correctness (meets acceptance, edge cases), readability,
+   convention conformance (Code Style / Boundaries / `CLAUDE.md` / surrounding code), security.
+2. **Heavy → full review.** When the task changed **exported/shared symbols**, is **Risk**-flagged, or is a
+   **large change**: run `open-code-review:review` (runs `ocr` on the working-copy diff — uncommitted until
+   Phase 5 — may apply fixes). At the same threshold, if `gitnexus-impact-analysis` is available, run one round
+   on the changed symbols (what depends on them, what could break).
+3. Problems surfaced → address (the OCR skill may fix them itself; else fix) → re-verify (back to Phase 3).
 
-## Phase 5 — Confirm, commit, then continue
+## Phase 5 — Confirm, commit, continue
 
-1. **Gate by run mode** (set in Phase 2.3) once the task is reviewed and verified:
-   - **Per-task confirm** — **present the task to the user and wait for confirmation** before committing.
-   - **Auto-chain** — skip the pause; proceed straight to the commit below and on to the next task.
-2. **Check off the task `[x]`** in the spec's Implementation Plan and **advance the `Status:` line in the same
-   edit** — `Building` while tasks remain, or `Built` if this was the last one — then **commit with `-s`
-   (`--signoff`)**, staging only this task's files plus that spec change. (Status rides the task commit; no
-   separate Status-only commit.) Use this message shape — lowercase title, bullet body (a list, not prose; each
-   bullet one simple, clear point), and a task trailer; let `-s` append the `Signed-off-by:` line itself, never
-   hand-write it:
+1. **Gate by run mode** once reviewed & verified:
+   - **Per-task confirm** → present the task and **wait for confirmation** before committing.
+   - **Auto-chain** → skip the pause; commit and continue.
+2. **Record → stage → commit**, in order:
+   - **Record:** check off `[x]` in the task list **and advance `Status:` in the same edit** — `Building` while
+     tasks remain, `Built` when this was the last.
+   - **Stage:** stage only this task's files. Stage the target edit **only if committed (`specs/`)**; a **local**
+     target (`.claude/specs/` or `.claude/debugs/`) is updated on disk but **never staged**.
+   - **Commit with `-s`** (let `-s` append `Signed-off-by:`; never hand-write it):
 
-   ```
-   <title, always lowercase>
+     ```
+     <type>(optional scope): <title in lowercase>
 
-   - <change, one simple point per bullet>
-   - ...
+     - <change, one simple point per bullet>
+     - ...
 
-   Task <task index> of <spec name>.
-
-   ```
-
-   `<task index>` is the task's ordinal in the Implementation Plan; `<spec name>` is the spec's hyphenated title
-   (e.g. `Task 3 of user-auth-flow`).
-3. Return to Phase 3 for the next pending task. When all tasks are done (spec `Status:` now `Built`),
-   **summarize:** tasks completed, tests added, commits made, and anything skipped, flagged, or left for the user.
-4. **End-of-build review** (runs in both modes — auto-chain only skips the *per-task* gate, not this one):
-   1. **Let the user review the changes.** Present an overall diff overview and ask whether anything needs
-      further adjustment. If so, return to Phase 3, fix it, then come back here.
-   2. **Full code retrospective** — run `/agent-skills:review` over the whole build (correctness, readability,
+     Task <task index> of <target name>.
+     ```
+     - `type` ∈ `fix|feat|build|chore|ci|docs|style|refactor|perf|test`.
+     - `<task index>` = the task's ordinal; `<target name>` = the hyphenated spec/debug title (e.g.
+       `Task 3 of user-auth-flow`).
+3. **Compaction checkpoint** (tasks still pending). You can't read the token count — judge from proxies:
+   - **Signals (either fires):** context looks large (~**>500K** — many/large files, piled tool output),
+     **or** it feels fuzzy (losing track, re-reading, unsure of state). Neither → skip to next step.
+   - **Action:** require a compaction in **both** run modes (`/compact` is user-only; a bloated/fuzzy context
+     degrades remaining tasks). Emit a copyable `/compact <focus>` block (English) and ask the user to run it.
+   - Focus **keeps:** target path, done (`[x]`) vs pending tasks, current branch, run mode, key decisions /
+     patterns, open questions / risks. **Drops:** verbose diffs & tool output of committed tasks (in git now).
+   - Build resumes cleanly from Phase 1 after compaction (target file + git hold the state).
+4. Back to Phase 3 for the next task. All done (`Status: Built`) → **summarize:** tasks completed, tests added,
+   commits made, anything skipped / flagged / left for the user.
+5. **End-of-build review** (both modes — auto-chain skips only the *per-task* gate, not this):
+   1. **User review** — present an overall diff overview; ask whether anything needs adjustment (yes → Phase 3,
+      then back here).
+   2. **Full retrospective** — `/agent-skills:review` over the whole build (correctness, readability,
       architecture, security, performance).
-   3. **Codex cross-check (conditional)** — if codex is installed locally (verify via `codex:setup`), also run
-      `/codex:review` (read-only review, applies no fixes) for an independent pass. If codex isn't available,
-      skip it and say so.
-   4. **Address findings** — fix the real issues the reviews surface and re-verify (back to Phase 3) before
-      finalizing.
-5. **Ask the user whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this spec as its target.
+   3. **Codex cross-check (conditional)** — if codex is installed (verify via `codex:setup`), also run
+      `/codex:review` (read-only, applies no fixes). Not available → skip and say so.
+   4. **Address findings** — fix the real issues, re-verify (Phase 3) before finalizing.
+6. **Ask whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this target.
