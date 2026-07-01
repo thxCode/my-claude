@@ -102,7 +102,7 @@ Before committing the task, review at a depth that matches the task's risk:
    trailer; let `-s` append the `Signed-off-by:` line itself, never hand-write it:
 
    ```
-   <title, always lowercase>
+   <type>(optional scope): <title in lowcase>
 
    - <change, one simple point per bullet>
    - ...
@@ -110,7 +110,7 @@ Before committing the task, review at a depth that matches the task's risk:
    Task <task index> of <spec name>.
 
    ```
-
+   `type` recommands from `fix|feat|build|chore|ci|docs|style|refactor|perf|test`.
    `<task index>` is the task's ordinal in the Implementation Plan; `<spec name>` is the spec's hyphenated title
    (e.g. `Task 3 of user-auth-flow`).
 3. Return to Phase 3 for the next pending task. When all tasks are done (spec `Status:` now `Built`),

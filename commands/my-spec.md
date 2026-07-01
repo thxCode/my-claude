@@ -17,7 +17,9 @@ Ask the user only when the judgment is genuinely pivotal; infer the rest from co
 **Planning mindset.** Plan deliberately, not in a race:
 - See clearly first — read what the requirement says *and* the current code before deciding anything.
 - Write down both what you're sure of and what you're not; revisit and adjust as you learn — no one-shot perfect pass.
-- Keep the spec legible to both of us. Resolve uncertainty with a test where you can; otherwise ask.
+- Keep the spec legible to both of us. When something's unclear or you need to backtrack, check related past
+  specs in `specs/` and `.claude/specs/` first; resolve remaining uncertainty with a test where you can,
+  otherwise ask.
 - After each new piece, re-read the earlier parts so the whole stays self-consistent with nothing left out.
 
 ## Phase 1 — Gather context
