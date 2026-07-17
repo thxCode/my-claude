@@ -1,6 +1,6 @@
 ---
 description: Implement a spec's Design Details (or a debug artifact's Fix Plan) task by task — TDD + incremental, conforming to project conventions; commit per task (confirm each, or auto-chain in auto/bypass mode), then a full end-of-build review
-argument-hint: [spec/debug title or path]
+argument-hint: [spec/debug title or path] [--assist codex|kimi]
 ---
 
 # /my-build
@@ -20,7 +20,7 @@ Implement the **task list** one task at a time. Output must conform to the proje
 **Target** = a **spec** (`specs/` committed, or `.claude/specs/` local) or a **debug artifact** (`.claude/debugs/`,
 always local). **Task list** = a spec's **Implementation Plan** / a debug artifact's **Fix Plan**.
 
-- **Language.** Talk to the user in their language; write target edits (idea write-ins, task check-offs) in
+- **Language.** Talk to the user in their configured language; write target edits (idea write-ins, task check-offs) in
   **English**; for other artifacts (code, comments, commits, docs) follow the project's conventions.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 - **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
@@ -104,11 +104,16 @@ Do **one** pending task from the task list:
      explicitly requested features.
    - **Heavy/at-scale simplification** → escalate to `agent-skills:code-simplification` (in Phase 4 review or
      end-of-build).
-5. **Unclear spec detail → ask the user** (don't guess); you may delegate the question to `codex:codex-rescue`
-   (or another model).
+5. **Unclear spec detail → ask the user** (don't guess). For a bounded factual question you may
+   delegate it to the rescue subagent (`codex:codex-rescue` or `kimi:kimi-rescue`) — apply
+   `crosscheck` (read-only, foreground, one tightly-scoped question). Keep this to **one bounded
+   question**; the per-task heavy **defect review** belongs to Phase 4's heavy-review step (now run by
+   codex/kimi), not here.
 6. **Build changes the target?** (a new idea, or a finding that overturns a Goal / Feature / User Story / Risk)
    — confirm, then write it back **at the source** (fix the upstream statement, not just the task line). Then
-   continue against the reconciled target.
+   continue against the reconciled target. A **design-level** problem (the design itself overturned, not a
+   task detail) → beyond the write-back, recommend returning to `/my-plan` to re-plan; if the main model was
+   downshifted for the build, suggest `/model claude-fable-5` first so full reasoning is back for the re-plan.
 
 ## Phase 4 — Review & impact analysis
 
@@ -116,11 +121,16 @@ Depth matches the task's risk:
 
 1. **Routine → inline self-review** on four axes: correctness (meets acceptance, edge cases), readability,
    convention conformance (Code Style / Boundaries / `CLAUDE.md` / surrounding code), security.
-2. **Heavy → full review.** When the task changed **exported/shared symbols**, is **Risk**-flagged, or is a
-   **large change**: run `open-code-review:review` (runs `ocr` on the working-copy diff — uncommitted until
-   Phase 5 — may apply fixes). At the same threshold, if `gitnexus-impact-analysis` is available, run one round
-   on the changed symbols (what depends on them, what could break).
-3. Problems surfaced → address (the OCR skill may fix them itself; else fix) → re-verify (back to Phase 3).
+2. **Heavy → full review with codex/kimi.** When the task changed **exported/shared symbols**, is
+   **Risk**-flagged, or is a **large change**: run **one** `/<tool>:review` over the task's working-copy
+   diff (uncommitted until Phase 5) — select the toolchain per `crosscheck` (Steps 0/1.5: availability +
+   `--assist` / ask-once, then reused for the rest of the build). Collect it **before committing this task**
+   and reconcile per `crosscheck` Steps 7–8 (spot-check findings, **STOP and ask which to fix**, never
+   auto-apply). This per-task heavy review is the **exception** to crosscheck's one-turn-per-stage ceiling
+   — one review per heavy task, never concurrent. At the same threshold, if `gitnexus-impact-analysis` is
+   available, run one round on the changed symbols (what depends on them, what could break).
+3. Problems surfaced → address (Claude fixes them; never auto-apply the tool's suggestions) → re-verify
+   (back to Phase 3).
 
 ## Phase 5 — Confirm, commit, continue
 
@@ -158,9 +168,15 @@ Depth matches the task's risk:
 5. **End-of-build review** (both modes — auto-chain skips only the *per-task* gate, not this):
    1. **User review** — present an overall diff overview; ask whether anything needs adjustment (yes → Phase 3,
       then back here).
-   2. **Full retrospective** — `/agent-skills:review` over the whole build (correctness, readability,
-      architecture, security, performance).
-   3. **Codex cross-check (conditional)** — if codex is installed (verify via `codex:setup`), also run
-      `/codex:review` (read-only, applies no fixes). Not available → skip and say so.
-   4. **Address findings** — fix the real issues, re-verify (Phase 3) before finalizing.
+   2. **Kick off the cross-check (gated, background) — apply `crosscheck`.** Pre-flight
+      `/<tool>:status` (no per-task rescue still in flight), then background **one** `/<tool>:review
+      --scope branch` over the whole build diff (working-tree scope if still uncommitted). **Once,
+      never per task.** It runs while you do the retrospective. Gate skip / neither tool available →
+      note it and skip.
+   3. **Full retrospective** — `/agent-skills:review` over the whole build (correctness, readability,
+      architecture, security, performance). This overlaps the background cross-check review.
+   4. **Barrier & address findings — apply `crosscheck`.** Collect the cross-check review
+      (`/<tool>:status` → `/<tool>:result`); merge/dedup its findings with the retrospective's,
+      spot-checking large findings against source (Step 7). **STOP and ask the user which to fix**
+      (never auto-apply), then fix the real issues and re-verify (Phase 3) before finalizing.
 6. **Ask whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this target.

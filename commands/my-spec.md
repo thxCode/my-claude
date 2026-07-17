@@ -17,7 +17,7 @@ my-debug ───────────────────────�
 Work the phases **in order** — each gates the next, no skipping ahead. Ask the user only when the judgment is
 genuinely pivotal; infer the rest from context.
 
-- **Language.** Talk to the user in their language; write every field of the spec in **English**.
+- **Language.** Talk to the user in their configured language; write every field of the spec in **English**.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 - **Planning mindset** — deliberate, not a race:
   - See clearly first — read the requirement *and* the current code before deciding.
@@ -31,9 +31,12 @@ genuinely pivotal; infer the rest from context.
 Build enough understanding to write a grounded spec (following the Source-lookup order):
 
 - **Project** — an `overview` skill if available; else `README.md`, `CLAUDE.md`, `docs/**/*.md`.
-- **Code** — `gitnexus-exploring` if available, else `search-first`. GitNexus returns nothing (index
+- **Code** — `gitnexus-exploring` if available, else `grep`/`find`. GitNexus returns nothing (index
   missing/stale) → **ask permission**, then `gitnexus-cli` → `analyze --index-only` (`--embeddings` only on the
   default branch; omit on a feature branch to preserve default-branch embeddings), and retry.
+- **Broad sweeps** (at the `grep`/`find` tier — GitNexus stays first when available) — multi-file inventories,
+  usage surveys, naming-convention scans → delegate to the built-in **Explore** subagent, conclusions only
+  (keeps the main context lean); pivotal files you still read yourself.
 - **External libs/frameworks** not in the dependency tree — **DeepWiki**; JS-rendered doc DeepWiki can't reach →
   `crawl4ai-search`. Documenting existing UI → a screenshot of the current screen (`crawl4ai-search`) is good
   grounding.

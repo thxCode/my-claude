@@ -42,18 +42,7 @@ claude plugin marketplace add addyosmani/agent-skills
 claude plugin install agent-skills@addy-agent-skills
 ```
 
-### 5. open-code-review plugin
-
-AI-powered code review CLI (`ocr`); used by `/my-build` for heavy-task review.
-
-```bash
-claude plugin marketplace add alibaba/open-code-review
-claude plugin install open-code-review@open-code-review
-```
-
-> The review skill needs the `ocr` CLI and an LLM configured — on first review it self-checks and guides `npm i -g @alibaba-group/open-code-review` + `ocr llm test`. See [alibaba/open-code-review](https://github.com/alibaba/open-code-review).
-
-### 6. Codex plugin (optional)
+### 5. Codex plugin (optional)
 
 Hand off or cross-check tasks with OpenAI Codex from inside Claude Code (e.g. the `codex:codex-rescue` agent).
 
@@ -61,6 +50,17 @@ Hand off or cross-check tasks with OpenAI Codex from inside Claude Code (e.g. th
 claude plugin marketplace add openai/codex-plugin-cc
 claude plugin install codex@openai-codex
 ```
+
+### 6. Kimi plugin (optional)
+
+Hand off or cross-check tasks with Kimi Code from inside Claude Code (e.g. the `kimi:kimi-rescue` agent) — a peer alternative to Codex.
+
+```bash
+claude plugin marketplace add thxcode/kimi-code-plugin-cc
+claude plugin install kimi@moonshotai-kimi
+```
+
+> Needs the Kimi Code CLI: `curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash`, then `kimi login` (OAuth device-code or API key) and `/kimi:setup` to verify. See [thxCode/kimi-code-plugin-cc](https://github.com/thxCode/kimi-code-plugin-cc).
 
 ### 7. crawl4ai (optional)
 
@@ -79,7 +79,7 @@ Custom slash commands live in [`commands/`](commands).
 - **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec — committed to `specs/<yyyy-mm-dd>-<title>.md`, or tracked locally (never committed) under `.claude/specs/` if you choose.
 - **`/my-spec-from-issue [github issue number or URL]`** — Issue-driven entry to the spec family: reads a GitHub issue (body + comments) from the current repo's upstream, distills it into a requirement, then hands off to `/my-spec` carrying the issue number — saving the spec as `<issue-number>-<title>.md` under the chosen tracking dir (`specs/` or `.claude/specs/`).
 - **`/my-plan [spec title]`** — Deepens a spec's Design Details and fills its Test Plan (KEP format) via task breakdown; after your review, writes back the spec only.
-- **`/my-debug [bug description, error, or repro]`** — Lightweight bug-fix lane: reproduces and root-causes a bug (with a `codex:rescue` adversarial cross-check when it's complex), then writes a single throwaway debug artifact (Background / PoC / Root Cause / Fix Plan / Test Plan) to `.claude/debugs/<yyyy-mm-dd>-<title>.md` (always local, never committed) and hands off to `/my-build`. The quick counterpart to `/my-spec`'s tracked Bug-fix path.
+- **`/my-debug [bug description, error, or repro]`** — Lightweight bug-fix lane: reproduces and root-causes a bug (with a codex/kimi adversarial cross-check when it's complex), then writes a single throwaway debug artifact (Background / PoC / Root Cause / Fix Plan / Test Plan) to `.claude/debugs/<yyyy-mm-dd>-<title>.md` (always local, never committed) and hands off to `/my-build`. The quick counterpart to `/my-spec`'s tracked Bug-fix path.
 - **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions) on a dedicated branch (`spec/<title>` for features, `fix/<title>` for bug fixes); commits per task (confirm each, or auto-chain in auto/bypass mode), then runs a full end-of-build review.
 - **`/my-ship [spec title]`** — Finalizes a spec: optional e2e tests (writing fixes back to spec + the cheapest appropriate test coverage), refreshes the overview, and updates docs/ADRs; conforms to project conventions.
 
@@ -87,7 +87,6 @@ Custom slash commands live in [`commands/`](commands).
 
 Custom skills live in [`skills/`](skills); Claude invokes them automatically when a task matches, or you can call one explicitly (e.g. `/auto-research`).
 
-- **`search-first`** — Research-before-coding workflow: searches for existing tools, libraries, and patterns before writing custom code, so you reuse instead of reinventing. Invokes the researcher agent.
 - **`address-pr-review`** — Consumes the review comments **already left** on a PR: triages each one against the source (real bug vs. false positive), fixes the real ones surgically, folds the fixes into the right commit to keep history clean, then replies to / resolves the threads. The counterpart to skills that *generate* a review.
 - **`auto-research`** — Autonomous research harness: decomposes a topic, fans out web searches, adversarially verifies every claim against its source, then synthesizes a Perplexity-style cited report at `.claude/reports/<title>.md`. Cost-aware (throttles on rate-limit usage) and observable (per-round digest). After showing the plan it runs unattended (**auto mode**) or pauses for per-round approval (**manual-approve mode**).
 - **`crawl4ai-search`** — Fetches web pages as clean, token-efficient Markdown (`md-fit` + BM25 filter) and screenshots rendered UIs via the local [crawl4ai](#7-crawl4ai-optional) (`crwl` CLI + a small SDK script). Used in place of `WebFetch` for JavaScript-rendered/content-dense pages and by `auto-research` workers for distilled fetches; supplies frontend render/responsive/component screenshots while delegating interactive debugging to `agent-skills:browser-testing-with-devtools`. Requires the optional crawl4ai install above.

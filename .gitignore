@@ -1,5 +1,9 @@
 *
 
+!agents/
+!agents/fast-worker.md
+!agents/test-worker.md
+
 !commands/
 !commands/my-build.md
 !commands/my-debug.md
@@ -10,14 +14,18 @@
 
 
 !skills/
-!skills/search-first/
 !skills/address-pr-review/
 !skills/crawl4ai-search/
 !skills/crawl4ai-search/**
 !skills/auto-research/
 !skills/auto-research/**
+!skills/crosscheck/
+!skills/crosscheck/**
 
 /CLAUDE.md
 /LICENSE
 /README.md
 !statusline-command.sh
+
+# macOS
+.DS_Store

@@ -38,7 +38,7 @@ Two grounding rules from the field (auto-research survey, Ch.7):
   Contract*).
 
 **Do not use** for: a single-fact lookup (just search), reading the local codebase (use Explore /
-gitnexus-exploring), or finding a library/tool to adopt (use `search-first`).
+gitnexus-exploring), or finding a library/tool to adopt (a plain npm/PyPI/GitHub search).
 
 ## Inputs
 

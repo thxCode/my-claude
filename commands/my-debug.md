@@ -1,6 +1,6 @@
 ---
-description: Diagnose a bug and plan its fix — root-cause it (codex adversarial cross-check when complex), then write a debug artifact (Background / PoC / Fix Plan / Test Plan) to .claude/debugs/; hands off to /my-build
-argument-hint: [bug description, error, or repro]
+description: Diagnose a bug and plan its fix — root-cause it (codex/kimi adversarial cross-check when complex), then write a debug artifact (Background / PoC / Fix Plan / Test Plan) to .claude/debugs/; hands off to /my-build
+argument-hint: [bug description, error, or repro] [--assist codex|kimi]
 ---
 
 # /my-debug
@@ -20,7 +20,7 @@ Like `/my-plan`, this command **only writes one artifact** — a debug doc under
 **Lane vs `/my-spec`.** `/my-debug` is the **lightweight, local** bug lane (throwaway artifact → build). A bug
 that deserves a **versioned, tracked** spec goes through `/my-spec`'s Bug-fix path instead.
 
-- **Language.** Talk to the user in their language; write the artifact in **English**.
+- **Language.** Talk to the user in their configured language; write the artifact in **English**.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 - **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
   repo / `CLAUDE.md`; retire what this work supersedes.
@@ -43,7 +43,7 @@ Type: Bug fix
 <The failing test or repro script that proves the bug — the concrete trigger.>
 
 ## Root Cause
-<The confirmed underlying cause (not the symptom). If a codex cross-check ran, record its verdict.>
+<The confirmed underlying cause (not the symptom). If a cross-check ran, record which toolchain and its verdict.>
 
 ## Fix Plan
 <Ordered `[ ]` tasks, vertically sliced, each with acceptance criteria + verification steps.
@@ -57,6 +57,13 @@ This IS /my-build's task list.>
 
 - Collect the symptom / error / repro hints from `$ARGUMENTS` and context.
 - Make **no edits** until Phase 5.
+- **Kick off the adversarial diagnosis early (gated, background) — apply `crosscheck`.** If the
+  framing already shows complexity (multi-component, intermittent, high-risk, or an obviously
+  non-obvious cause), background a **read-only** rescue subagent (`codex:codex-rescue` or
+  `kimi:kimi-rescue`, per the selected toolchain) for an independent root-cause diagnosis **seeded
+  from the symptom + reproduction only** — never your hypothesis, so it stays an independent second
+  voice. It runs while you investigate in Phase 2; collect it in Phase 3.
+  Borderline / looks simple → don't spend yet, decide in Phase 3.
 
 ## Phase 2 — Find the root cause
 
@@ -71,10 +78,13 @@ This IS /my-build's task list.>
 ## Phase 3 — Adversarial cross-check (complexity-gated)
 
 - **Trigger:** the bug is **complex** — multi-component, intermittent, non-obvious root cause, or high-risk.
-- **Action:** probe availability via `codex:setup`, then run `codex:rescue` for an **independent root-cause
-  diagnosis**. Reconcile its verdict against yours; only lock the Root Cause once they agree (or you can explain
-  the divergence). If codex is unavailable, skip and say so.
-- **Simple bug:** skip this phase and note it.
+- **Barrier & reconcile — apply `crosscheck`.** Collect the diagnosis kicked off in Phase 1
+  (`/<tool>:status` → `/<tool>:result`). If none was launched but Phase 2 revealed complexity, run one
+  now (the rescue subagent — `codex:codex-rescue` or `kimi:kimi-rescue` — read-only, seeded from
+  symptom + repro). Reconcile its verdict against yours per the skill (Step 7): lock the Root Cause
+  only once you agree or can explain the divergence; surface any unresolved disagreement to the user.
+  **Record its verdict in the artifact's Root Cause.**
+- **Simple bug / neither tool available:** skip and note it.
 
 ## Phase 4 — Write the artifact
 
@@ -92,7 +102,9 @@ This IS /my-build's task list.>
 3. Write `.claude/debugs/<yyyy-mm-dd>-<title>.md` (`date +%Y-%m-%d`; create the dir; **never stage it**). Confirm
    the saved path.
 4. **Offer the next step** (user may decline both):
-   - **Compact, then build** — emit a copyable `/compact <focus>` block (in English), then `/my-build <title>`.
+   - **Compact, then build** — emit one copyable block (in English): `/compact <focus>`, then `/model opus`
+     (build's executor — `/model sonnet` when the fix is small and well-patterned), then `/my-build <title>`.
+     Switching right after compaction keeps the model-switch re-read minimal (prompt caches are per-model).
      Focus **keeps:** artifact path, Fix Plan (tasks + acceptance) + Test Plan, reusable codebase landings
      (paths), the Root Cause, next step `/my-build <title>`; **drops:** verbose debugging transcripts.
-   - **Build now** — continue into `/my-build` with this artifact as its target.
+   - **Build now** — continue into `/my-build` with this artifact as its target, keeping the current model.

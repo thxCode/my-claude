@@ -1,6 +1,6 @@
 ---
 description: Refine a spec's Design Details and fill its Test Plan (KEP format) via task breakdown — writes back the spec only
-argument-hint: [spec title or path]
+argument-hint: [spec title or path] [--assist codex|kimi]
 ---
 
 # /my-plan
@@ -16,7 +16,7 @@ my-debug ───────────────────────�
 
 This command **only ever writes back the one spec file** — no other edits. Stay read-only otherwise.
 
-- **Language.** Talk to the user in their language; write the spec in **English**.
+- **Language.** Talk to the user in their configured language; write the spec in **English**.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 - **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
   spec / `CLAUDE.md` / repo; retire what this work supersedes.
@@ -43,13 +43,22 @@ This command **only ever writes back the one spec file** — no other edits. Sta
 
 1. **Strictly read-only** — the only write is the Phase 5 write-back.
 2. Re-read the spec end-to-end.
-3. Re-ground the design in the real codebase: `gitnexus-exploring` if available, else `search-first`. External
+3. Re-ground the design in the real codebase: `gitnexus-exploring` if available, else `grep`/`find`. External
    libs/frameworks not in the dependency tree → **DeepWiki**; a JS-rendered doc DeepWiki can't reach →
    `crawl4ai-search`. **Frontend** spec → a screenshot of the current rendered screen (`crawl4ai-search`, PNG to
-   the scratchpad) keeps this phase read-only on project files.
+   the scratchpad) keeps this phase read-only on project files. Broad sweeps (at the `grep`/`find` tier) —
+   multi-file inventories, usage surveys, naming-convention scans → delegate to the built-in **Explore**
+   subagent, conclusions only (keeps the main context lean); pivotal files you still read yourself.
 4. **Learn the build/package system** — `Makefile` / build scripts, `package.json` scripts, CI config, any
    **overview** / **development** docs: exactly how it builds, tests, lints, packages. This grounds **Commands**
    in Phase 3 (what the project actually uses, not guesses). Reading only.
+5. **Kick off a design cross-check (gated, background) — apply `crosscheck`.** As early as
+   item 2 lets you, if the gate authorizes (novel / high-stakes / Risk-flagged design), background a
+   **read-only** rescue subagent (`codex:codex-rescue` or `kimi:kimi-rescue`, per the selected
+   toolchain) seeded from the spec's **existing Proposal / Goals / Design Details** (the raw design
+   intent, *not* your refinements) to red-team the approach and surface design risks + test scenarios.
+   It runs while you re-ground (items 3–4) and draft Phase 3 — an independent second voice, one turn,
+   no wait. Gate skips (or neither tool available) → note it and move on. Collect it at Phase 4.
 
 ## Phase 3 — Plan the implementation (Design Details)
 
@@ -77,6 +86,12 @@ Deepen the spec's **Design Details**:
   leave a stale Goal/Feature above the plan.
 
 ## Phase 4 — Fill the Test Plan (KEP format)
+
+**Barrier first — collect the design cross-check (if one was kicked off in Phase 2).** Per
+`crosscheck` (Steps 5/7): `/<tool>:status` → `/<tool>:result`; fold the tool's design-risk findings
+into **Design Details / Risks** (Phase 3) and its test-scenario suggestions into the Test Plan below.
+Lock the plan only once reconciled; surface any unresolved disagreement to the user. Never
+auto-apply — present and ask.
 
 Replace the `Test Plan` placeholder with the structure below. **Fill every field with concrete items or
 `None` — leave no `<…>` placeholders.**
@@ -110,9 +125,13 @@ code solid enough prior to committing the changes necessary to implement this en
    Plan you just wrote; reconcile any upstream statement the plan now contradicts. The spec must read cleanly
    top-to-bottom — clear, logical, self-consistent.
 5. **Offer the next step** (user may decline both and stop):
-   - **Compact, then build** — context heavy / want a clean slate. Emit a copyable `/compact <focus>` block
-     (English), then `/my-build <title>`. Focus **keeps:** target spec path, finalized Implementation Plan (tasks
-     + acceptance) + Test Plan, reusable codebase landings (files / functions / patterns with paths), flagged
-     Risks → Mitigations, next step `/my-build <title>`; **drops:** verbose exploration / grep transcripts and
-     superseded drafts. `/my-build` re-resolves the spec from disk, so it resumes cleanly after compaction.
-   - **Build now** — continue straight into `/my-build` with this spec.
+   - **Compact, then build** — context heavy / want a clean slate. Emit one copyable block (English):
+     `/compact <focus>`, then `/model opus` (build's executor — suggest `/model sonnet` instead when the plan is
+     fully specified and low-risk), then `/my-build <title>`. Switching right after compaction keeps the
+     model-switch re-read minimal (prompt caches are per-model). Focus **keeps:** target spec path, finalized
+     Implementation Plan (tasks + acceptance) + Test Plan, reusable codebase landings (files / functions /
+     patterns with paths), flagged Risks → Mitigations, next step `/my-build <title>`; **drops:** verbose
+     exploration / grep transcripts and superseded drafts. `/my-build` re-resolves the spec from disk, so it
+     resumes cleanly after compaction.
+   - **Build now** — continue straight into `/my-build` with this spec, keeping the current model (switching
+     without compacting re-reads the full context — only suggest it if the user asks).

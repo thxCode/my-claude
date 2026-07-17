@@ -1,6 +1,6 @@
 ---
 description: Finalize a branch (target-optional) — optional e2e tests (fixes written back), refresh the overview, update docs/ADRs, tidy the branch history, open a PR using the upstream PR template; conforms to project conventions
-argument-hint: [spec/debug title or path, or nothing to ship the current branch]
+argument-hint: [spec/debug title or path, or nothing to ship the current branch] [--assist codex|kimi]
 ---
 
 # /my-ship
@@ -19,7 +19,7 @@ overview and docs, open a clean PR. **Target-optional** — a **target** (spec o
 finalization and gets written back; with none, ship straight from the branch diff. Every change conforms to
 project conventions (target **Code Style** & **Boundaries** when present, `CLAUDE.md`, existing test/doc structure).
 
-- **Language.** Talk to the user in their language; write target edits (e2e fix write-backs) in **English**;
+- **Language.** Talk to the user in their configured language; write target edits (e2e fix write-backs) in **English**;
   other artifacts (tests, overview, docs/ADRs, commits, PR body) follow the project's conventions.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
 
@@ -54,15 +54,30 @@ local). Local targets are updated on disk but **never staged**.
      Focus **keeps:** ship target (branch + target path if any), base branch, ship mode, finalization phases
      already done, key decisions / open questions. **Drops:** verbose diffs & tool output of committed work.
    - Ship resumes cleanly from Phase 1 after compaction.
+6. **Kick off the ship-time cross-check (gated, background) — apply `crosscheck`.**
+   Pre-flight `/<tool>:status`: adopt any review already in flight (e.g. after a compaction resume) —
+   **never launch a second** — and barrier on any job `/my-build` left running. **De-dup:** if
+   `/my-build` already reviewed exactly these commits and nothing has changed the diff, **don't spend
+   now** — defer to the Phase 5 barrier, which reviews only what Phases 2–4 change (e2e fixes).
+   Otherwise (no-target mode, or the branch was never reviewed) background **one** `/<tool>:review
+   --scope branch --base <base>` (`/<tool>:adversarial-review <focus>` if the build was **Risk**-flagged),
+   overlapping Phases 2–4; collect it at Phase 5. Neither tool available → skip and say so.
 
-## Phase 2 — End-to-end tests (only if an e2e skill is available)
+## Phase 2 — End-to-end tests (only if the project has an e2e surface)
 
-Only if the project has an e2e skill (e.g. `agent-skills:browser-testing-with-devtools`):
+Only if the project has an e2e surface — a project e2e skill, a bare e2e suite (make/npm/pytest target), or a
+browser-drivable UI (`agent-skills:browser-testing-with-devtools`):
 
 1. **Ask whether to run e2e now.** No → Phase 3.
-2. Run them through that skill.
-3. **Each failure:** fix it and cover at the cheapest layer (prefer unit over e2e); **target-driven → also write
-   the fix back into the target.** Then prune obsolete e2e cases.
+2. **Route by the surface:**
+   - **Project e2e skill** (in the project's `.claude/skills/`) → run it **in the main loop** as it is designed —
+     such skills may orchestrate their own subagents and gate mutating steps on user confirmation, so never wrap
+     one in a subagent; its own frontmatter pins its model.
+   - **Otherwise** → delegate to the `test-worker` subagent (sonnet — mechanical execution, off the main
+     context): pass a bare suite command + expected outcome, or the browser scenario list; it returns pass/fail
+     + evidence and never edits files.
+3. **Each failure:** fix it here in the main loop and cover at the cheapest layer (prefer unit over e2e);
+   **target-driven → also write the fix back into the target.** Then prune obsolete e2e cases.
 
 ## Phase 3 — Overview (only if an overview skill is available)
 
@@ -76,6 +91,13 @@ Is the change **architecturally significant** (new/changed public API, new depen
 - **No** → quick inline check: did this make any doc stale? Update it if so; else say so and move on. No ADR.
 
 ## Phase 5 — Confirm, tidy history & commit
+
+**Barrier first — cross-check (apply `crosscheck`), before touching history.** Collect the
+ship review kicked off in Phase 1 (`/<tool>:status` → `/<tool>:result`). If it was deferred there but
+Phases 2–4 changed the diff (e2e fixes / new commits), run **one** review now over that changed scope.
+Spot-check findings against source (Step 7); **STOP and ask the user which to fix** (never auto-apply);
+fold accepted fixes in **now**, so step 5's history-tidy squashes them into their logical commit.
+Nothing warranted (de-dup skip, no changes, or neither tool available) → say so and continue.
 
 1. **Any code changed in Phases 2–4 → re-run the full suite** (green before committing).
 2. **Mark the target's terminal state — target-driven only, before any PR exists** (write in **English**):
