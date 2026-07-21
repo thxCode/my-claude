@@ -21,6 +21,8 @@ Interact with GitHub (issues, PRs, code search) via the official MCP endpoint. R
 ```bash
 export GITHUB_PERSONAL_ACCESS_TOKEN=<your-token>
 claude mcp add -s user -t http github https://api.githubcopilot.com/mcp -H "Authorization: Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
+# or
+claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=$GITHUB_PERSONAL_ACCESS_TOKEN -- npx -y @modelcontextprotocol/server-github
 ```
 
 ### 3. GitNexus MCP

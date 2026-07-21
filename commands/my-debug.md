@@ -27,8 +27,9 @@ that deserves a **versioned, tracked** spec goes through `/my-spec`'s Bug-fix pa
 
 ## Artifact — `.claude/debugs/<yyyy-mm-dd>-<title>.md`
 
-Always **local**, never staged. `Status:` lifecycle `Diagnosed → Building → Built → Shipped` (this command sets
-`Diagnosed`; `/my-build` and `/my-ship` advance it). Branch (in `/my-build`): always **`fix/<title>`**.
+- Always **local**, never staged. 
+- **`Status:`** — lifecycle trace; initial `Diagnosed`, then `Building` and `Built`, finally `Shipped`.
+- Branch (in `/my-build`): always **`fix/<title>`**.
 
 ```markdown
 # Debug: <Title>

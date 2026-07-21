@@ -89,7 +89,7 @@ Fill the KEP-style template below — it *is* the coverage checklist; address ev
 placeholders.
 
 Two metadata lines under the title:
-- **`Status:`** — lifecycle trace; initial `Specified`, later `Specified → Planned → Building → Built → Shipped`.
+- **`Status:`** — lifecycle trace; initial `Specified`, then `Planned`, next `Building` and `Built`, finally `Shipped`.
 - **`Type:`** — the Phase 2 classification (`Feature` / `Bug fix`); `/my-build` reads it to pick the branch prefix.
 
 ```markdown
