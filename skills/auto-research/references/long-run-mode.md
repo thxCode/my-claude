@@ -16,6 +16,8 @@ unattended, so it is **always `auto`**: the SKILL.md step-1.5 mode gate and per-
 
 ## State files (persist across sessions — never rely on context)
 
+`task_spec.md` + `progress.json` replace bounded mode's `state.json`.
+
 ```
 <cwd>/.claude/reports/<title>/
 ├── task_spec.md          # question, assumptions, success criteria, dimensions

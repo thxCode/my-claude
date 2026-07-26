@@ -69,8 +69,7 @@ gate (step 2) is an additional, designed interaction point. Outside these define
 - **Cross-model when you can.** An independent verifier is strongest when it is a *different model family* — a
   same-model verifier shares the producer's blind spots, so its agreement can still be hallucinated consensus
   (§7.6). When a codex-related skill is available, prefer **Codex** (a different model) for an adversarial pass on
-  load-bearing / code-grounded findings (see step 6.5). Codex's output is *one more input to verify*, **not ground
-  truth**: the orchestrator adjudicates every Codex verdict against the real source (Codex errs too).
+  load-bearing / code-grounded findings (see step 6.5).
 
 ## Process (default `bounded` mode)
 
@@ -201,8 +200,7 @@ path, confidence, sources-verified, assumptions, coverage gaps, refuted/uncertai
 ## Cost Governor
 
 `scripts/cost-check.sh` reads `~/.claude/rate_limits.json` (kept fresh by the status line), takes the **max of
-the 5h and 7d** used-percentages, and applies a **~15-minute freshness TTL**. File absent / empty / stale →
-verdict `unknown` → **proceed** (never throttle on unknown; note "rate limit: unknown" in the digest).
+the 5h and 7d** used-percentages, and applies a **~15-minute freshness TTL**.
 
 | max(5h,7d) | verdict | orchestrator action |
 |------------|---------|---------------------|
@@ -210,6 +208,7 @@ verdict `unknown` → **proceed** (never throttle on unknown; note "rate limit: 
 | ≥ 70 | `warn` | note it in the digest, continue |
 | ≥ 85 | `soft` | finish in-flight work, start **no new** dimensions, head to synthesis (coverage marked incomplete) |
 | ≥ 95 | `hard` | stop fan-out now, synthesize what's verified, return early flagged `cost_ceiling` |
+| absent / stale | `unknown` | proceed — note "rate limit: unknown" in the digest; never throttle on a missing metric |
 
 Cost is checked **between fan-out batches** (the harness can't cancel in-flight subagents), so the practical
 granularity is one batch — keep batches modest so a crossing is caught quickly. The governor is only active for
