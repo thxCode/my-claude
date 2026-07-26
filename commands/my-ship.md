@@ -1,59 +1,41 @@
 ---
-description: Finalize a branch (target-optional) — optional e2e tests (fixes written back), refresh the overview, update docs/ADRs, tidy the branch history, open a PR using the upstream PR template; conforms to project conventions
-argument-hint: [spec/debug title or path, or nothing to ship the current branch] [--assist codex|kimi]
+description: Finalize and ship a branch — e2e, docs and ADRs, tidy history, open a PR. Target-optional.
+argument-hint: "[spec/debug title or path, or nothing to ship the current branch] [--assist codex|kimi]"
 ---
 
 # /my-ship
 
 Finalize and ship the current branch: **$ARGUMENTS**
 
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
-
 Tidy up after the build: validate end-to-end, keep the suite green, tidy the branch history, resync the
 overview and docs, open a clean PR. **Target-optional** — a **target** (spec or debug artifact) drives
 finalization and gets written back; with none, ship straight from the branch diff. Every change conforms to
 project conventions (target **Code Style** & **Boundaries** when present, `CLAUDE.md`, existing test/doc structure).
 
-- **Language.** Talk to the user in their configured language; write target edits (e2e fix write-backs) in **English**;
-  other artifacts (tests, overview, docs/ADRs, commits, PR body) follow the project's conventions.
+- **Language.** Write target edits (e2e fix write-backs) in **English**; other artifacts (tests, overview,
+  docs/ADRs, commits, PR body) follow the project's conventions; talk to the user in their configured language.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-
-**Target** = a **spec** (`specs/` committed, or `.claude/specs/` local) or a **debug artifact** (`.claude/debugs/`,
-local). Local targets are updated on disk but **never staged**.
 
 ## Phase 1 — Resolve the ship target
 
 1. **Branch & base.** Confirm the current branch and its base (default branch — e.g. `main`; resolve via
    `git symbolic-ref refs/remotes/origin/HEAD` when unsure). `base..HEAD` is the **ship scope**.
-2. **Attach a target (optional).** Resolve from `$ARGUMENTS` across `specs/`, `.claude/specs/`, `.claude/debugs/`:
-   - path / full filename → as-is.
-   - bare title → match `{specs,.claude/specs,.claude/debugs}/*-<title>.md` (date/issue prefix); also legacy
-     `<dir>/<title>.md`. Several → list and ask.
-   - empty → exactly one target across those dirs → use it; else proceed **without** one.
-
-   **Target-optional — never block on a missing target; any branch can ship.** Only when `$ARGUMENTS`
-   **explicitly names** a target that doesn't exist, offer (don't force) `/my-spec` (or `/my-debug`) — or ship
-   as-is on the user's say-so. Bare/empty with none found → **no-target mode** (ship from the branch diff). State
-   the mode (**target-driven** vs **no-target**) in your first message.
+2. **Attach a target (optional).** Resolve `$ARGUMENTS` per
+   `~/.claude/references/my-workflow/resolve-target.md` — **target-optional; never block on a missing one, any
+   branch can ship.** State the mode (**target-driven** vs **no-target**) in your first message.
 3. **Run the full test suite; green before finalizing** — fix failures or surface them.
-4. **Consistency scan (read-only) — target-driven only.** Read the target's upstream statements against the
-   completed task list; flag any built outcome that contradicts them; on confirmation, reconcile the upstream
-   text (**modifying only the target**). Sections by target type:
-   - spec → Goals / Features / User Stories vs Implementation Plan.
-   - debug artifact → Root Cause / Background vs Fix Plan.
+4. **Consistency scan (read-only) — target-driven only.** Two checks, both read-only:
+   - **Doc vs doc.** Read the target's upstream statements against the completed task list; flag any built
+     outcome that contradicts them (spec → Goals / Features / User Stories vs Implementation Plan; debug
+     artifact → Root Cause / Background vs Fix Plan).
+   - **Diff vs spec.** Run the `spec-reviewer` subagent over `base..HEAD`, seeded with the target and the diff
+     only. The doc-vs-doc check can't see the code — this one catches what the branch actually shipped:
+     requirements missing, scope nobody asked for, requirements implemented wrong.
 
-   **No target → skip.**
-5. **Compaction checkpoint** (ship usually follows a long build). Judge from proxies:
-   - **Signals (either fires):** context looks large (~**>250K**), **or** it feels fuzzy. Neither → Phase 2.
-   - **Action:** emit a copyable `/compact <focus>` block (English), ask the user to run it before continuing.
-     Focus **keeps:** ship target (branch + target path if any), base branch, ship mode, finalization phases
-     already done, key decisions / open questions. **Drops:** verbose diffs & tool output of committed work.
-   - Ship resumes cleanly from Phase 1 after compaction.
+   On confirmation, reconcile the upstream text (**modifying only the target**); code-level findings go to
+   Phase 2's fix loop. **No target → skip both.**
+5. **Compaction checkpoint** (ship usually follows a long build) — apply
+   `~/.claude/references/my-workflow/compaction.md` (its `/my-ship` row and threshold).
 6. **Kick off the ship-time cross-check (gated, background) — apply `crosscheck`.**
    Pre-flight `/<tool>:status`: adopt any review already in flight (e.g. after a compaction resume) —
    **never launch a second** — and barrier on any job `/my-build` left running. **De-dup:** if
@@ -128,6 +110,22 @@ Nothing warranted (de-dup skip, no changes, or neither tool available) → say s
      GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash <base>
      ```
    - Use `git blame <file>` / `git log --oneline -- <file>` to find which commit a fix belongs to.
+   - **Normalize task order — after a parallel (`team`) build only.** That lane commits in *completion* order,
+     so the log can read `Task 1`, `Task 3`, `Task 2`. Every ordering is valid (parallel tasks own disjoint
+     paths), but the PR should read in the plan's order. Once folding is done, reorder by the `Task N of`
+     trailer — that same disjointness is what makes this conflict-free:
+     ```bash
+     TODO=$(mktemp)
+     git log --reverse --format='%h' <base>..HEAD | while read h; do
+       n=$(git log -1 --format=%B "$h" | sed -n 's/^Task \([0-9]*\) of .*/\1/p')
+       echo "${n:-9999} pick $h $(git log -1 --format=%s "$h")"
+     done | sort -n -s | cut -d' ' -f2- > "$TODO"
+     GIT_SEQUENCE_EDITOR="cp $TODO" git rebase -i <base>
+     ```
+     Commits with no trailer (ship's own finalization commits) sort last, keeping their relative order.
+     **A conflict here means `Owns:` overlapped and the tasks were never truly independent** — `git rebase
+     --abort`, keep completion order, and surface it: that overlap is a worse finding than the ordering.
+     Sequential builds already commit in order — skip this.
 6. **Ask whether to push the branch and open a PR.** If yes, push and create it.
    - **PR body — learn the upstream template first.** Look (case-insensitive, in order) for
      `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`,

@@ -1,25 +1,18 @@
 ---
-description: Start spec-driven development from a GitHub issue — read the issue, then hand off to /my-spec carrying the issue number
-argument-hint: [github issue number or URL]
+description: Turn a GitHub issue into a spec — hands off to /my-spec carrying the issue number.
+argument-hint: "[github issue number or URL]"
 ---
 
 # /my-spec-from-issue
 
 Start spec-driven development from a GitHub issue: **$ARGUMENTS**
 
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
-
 The issue-driven entry to the spec family. Its only job: **read the issue, distill it into a requirement, hand
 off to `/my-spec`** carrying the issue number. All the real spec work happens in `/my-spec` — don't duplicate its
 phases here.
 
-**Language.** Talk to the user in their configured language; everything written into the spec stays **English** (handled by
-`/my-spec`).
+**Language.** Everything written into the spec stays **English** (handled by `/my-spec`); talk to the user in
+their configured language.
 
 ## Phase 1 — Resolve & read the issue
 

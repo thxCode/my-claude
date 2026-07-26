@@ -1,30 +1,17 @@
 ---
-description: Spec-driven development — gather context, judge intent, then write a KEP-style spec to specs/
-argument-hint: [what you want to build or fix]
+description: Write a KEP-style spec before coding — saves to specs/. Use to start a feature, spec out an idea, or open a tracked bug fix.
+argument-hint: "[what you want to build or fix]"
 ---
 
 # /my-spec
 
 Start spec-driven development for: **$ARGUMENTS**
 
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
-
 Work the phases **in order** — each gates the next, no skipping ahead. Ask the user only when the judgment is
 genuinely pivotal; infer the rest from context.
 
-- **Language.** Talk to the user in their configured language; write every field of the spec in **English**.
+- **Language.** Write every field of the spec in **English**; talk to the user in their configured language.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-- **Planning mindset** — deliberate, not a race:
-  - See clearly first — read the requirement *and* the current code before deciding.
-  - Write down what you're sure of *and* what you're not; revise as you learn (no one-shot perfect pass).
-  - Keep the spec legible; when stuck, check related past specs in `specs/` and `.claude/specs/` first; resolve
-    uncertainty with a test where you can, else ask.
-  - After each new piece, re-read the earlier parts so the whole stays self-consistent.
 
 ## Phase 1 — Gather context
 
@@ -72,6 +59,10 @@ Infer it; anything not clearly a bug takes the Feature path.
    the root cause; acceptance = the bug no longer reproduces + a regression guard; user story = the repro scenario.
 
 ## Phase 3 — Clarify the five areas
+
+**Read `~/.claude/references/my-workflow/decisions.md` before the first question and work every fork through
+it** — it is what keeps this phase from agreeing its way into the option that's cheapest to build and most
+expensive to own.
 
 Nail all five before writing — **skip any already answered by Phase 2; don't re-ask.** Rule: spec-before-code —
 pin *what* & *why* now, leave *how* to `/my-plan`.

@@ -2,6 +2,8 @@
 
 !agents/
 !agents/fast-worker.md
+!agents/spec-reviewer.md
+!agents/task-worker.md
 !agents/test-worker.md
 
 !commands/
@@ -11,6 +13,10 @@
 !commands/my-ship.md
 !commands/my-spec-from-issue.md
 !commands/my-spec.md
+
+!references/
+!references/my-workflow/
+!references/my-workflow/**
 
 
 !skills/

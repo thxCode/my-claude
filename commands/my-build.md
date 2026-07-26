@@ -1,43 +1,29 @@
 ---
-description: Implement a spec's Design Details (or a debug artifact's Fix Plan) task by task — TDD + incremental, conforming to project conventions; commit per task (confirm each, or auto-chain in auto/bypass mode), then a full end-of-build review
-argument-hint: [spec/debug title or path] [--assist codex|kimi]
+description: Build a planned spec or debug artifact task by task — TDD, commit per task. `auto` chains unattended; `team` builds independent tasks in parallel.
+argument-hint: "[spec/debug title or path] [auto|team] [--assist codex|kimi]"
 ---
 
 # /my-build
 
 Build the target: **$ARGUMENTS**
 
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
-
-Implement the **task list** one task at a time. Output must conform to the project's conventions — the target's
-**Code Style** & **Boundaries**, `CLAUDE.md`, and surrounding code. **Verify before you commit.**
+Implement the **task list**. Output must conform to the project's conventions — the target's **Code Style** &
+**Boundaries**, `CLAUDE.md`, and surrounding code. **Verify before you commit.**
 
 **Target** = a **spec** (`specs/` committed, or `.claude/specs/` local) or a **debug artifact** (`.claude/debugs/`,
 always local). **Task list** = a spec's **Implementation Plan** / a debug artifact's **Fix Plan**.
 
-- **Language.** Talk to the user in their configured language; write target edits (idea write-ins, task check-offs) in
-  **English**; for other artifacts (code, comments, commits, docs) follow the project's conventions.
+- **Language.** Write target edits (idea write-ins, task check-offs) in **English**; for other artifacts (code,
+  comments, commits, docs) follow the project's conventions; talk to the user in their configured language.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-- **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
-  target / `CLAUDE.md` / repo; retire what this work supersedes.
 
 ## Phase 1 — Resolve the target
 
-1. **Strip an optional `auto` token** from `$ARGUMENTS` first (it picks the run mode in Phase 2, not the target);
-   the remainder is the selector. Resolve against `specs/`, `.claude/specs/`, **and `.claude/debugs/`**:
-   - path / full filename → use as-is.
-   - bare title → match `{specs,.claude/specs,.claude/debugs}/*-<title>.md` (prefixed by date or issue number);
-     also accept legacy `<dir>/<title>.md`. Several match → list and ask.
-   - empty → if exactly one target exists across those dirs, use it; else list and ask.
-2. **Missing file → stop and hand back** to `/my-spec` (or `/my-debug` for a bug) to initialize it. Don't invent
-   requirements.
-3. **Not planned → recommend the planner first, ask before proceeding.** Judge from **content**, not the
-   `Status:` line (a lifecycle trace; if it contradicts content, trust content and fix it in passing):
+1. **Strip an optional `auto` or `team` token** from `$ARGUMENTS` first (they pick the run mode in Phase 2, not
+   the target); the remainder is the selector. Resolve it per
+   `~/.claude/references/my-workflow/resolve-target.md`.
+2. **Not planned → recommend the planner first, ask before proceeding.** Judge from **content**, not the
+   `Status:` line:
    - **spec** not planned (Implementation Plan still `> TODO` / no `[ ]`; or Test Plan has `TODO` / any `<…>`) →
      recommend `/my-plan`.
    - **debug artifact** not planned (Fix Plan empty/`TODO`; or Test Plan has placeholders) → recommend `/my-debug`.
@@ -60,13 +46,19 @@ always local). **Task list** = a spec's **Implementation Plan** / a debug artifa
 
    | Mode | When | Stops |
    | --- | --- | --- |
+   | **Team** (parallel) | `team` token passed **and** the task list carries `Blocked by:` / `Owns:` | gated tasks + compaction (5.3) + final review (5.5) |
    | **Auto-chain** | session in `acceptEdits`/`bypassPermissions`, **or** `auto` token passed | only compaction (5.3) + final review (5.5) |
    | **Per-task confirm** (default) | every other case | pauses before each commit |
 
    State the chosen run mode **and** the tracking mode (committed if under `specs/`; local if under
    `.claude/specs/` or `.claude/debugs/`) in your first message.
-5. **Backbone (inline discipline):** one vertical task at a time, never big-bang; drive with TDD (RED → GREEN →
-   keep suite green; loop in Phase 3). **PoC/spike front-loaded?** (risky items ordered first) build it first;
+
+   **Team mode → read `~/.claude/references/my-workflow/team-lane.md` now and follow it in place of Phase 3's
+   one-task-at-a-time sequencing.** Everything else in this command still applies. `team` passed but the task
+   list has no `Blocked by:` / `Owns:` → don't improvise a DAG: say so, recommend `/my-plan` to annotate it,
+   and offer per-task confirm instead.
+5. **Backbone (inline discipline):** one **tracer bullet** at a time, never big-bang; drive with TDD (RED →
+   GREEN → keep suite green; loop in Phase 3). **PoC/spike front-loaded?** (risky items ordered first) build it first;
    if it overturns a Goal/Feature/design, reconcile the target **now** at its source (Phase 3.5) while churn is
    cheap — keeps `/my-ship`'s history folding small.
 6. **Extra skills by task nature:**
@@ -155,28 +147,30 @@ Depth matches the task's risk:
      - `type` ∈ `fix|feat|build|chore|ci|docs|style|refactor|perf|test`.
      - `<task index>` = the task's ordinal; `<target name>` = the hyphenated spec/debug title (e.g.
        `Task 3 of user-auth-flow`).
-3. **Compaction checkpoint** (tasks still pending). You can't read the token count — judge from proxies:
-   - **Signals (either fires):** context looks large (~**>500K** — many/large files, piled tool output),
-     **or** it feels fuzzy (losing track, re-reading, unsure of state). Neither → skip to next step.
-   - **Action:** require a compaction in **both** run modes (`/compact` is user-only; a bloated/fuzzy context
-     degrades remaining tasks). Emit a copyable `/compact <focus>` block (English) and ask the user to run it.
-   - Focus **keeps:** target path, done (`[x]`) vs pending tasks, current branch, run mode, key decisions /
-     patterns, open questions / risks. **Drops:** verbose diffs & tool output of committed tasks (in git now).
-   - Build resumes cleanly from Phase 1 after compaction (target file + git hold the state).
+3. **Compaction checkpoint** (tasks still pending) — apply
+   `~/.claude/references/my-workflow/compaction.md` (its `/my-build` row and threshold).
 4. Back to Phase 3 for the next task. All done (`Status: Built`) → **summarize:** tasks completed, tests added,
    commits made, anything skipped / flagged / left for the user.
-5. **End-of-build review** (both modes — auto-chain skips only the *per-task* gate, not this):
-   1. **User review** — present an overall diff overview; ask whether anything needs adjustment (yes → Phase 3,
+5. **End-of-build review** (all modes — auto-chain and team skip only the *per-task* gate, not this):
+   1. **Pin the scope, fail fast.** Resolve the base and confirm `git diff <base>...HEAD` is non-empty (working
+      tree if still uncommitted). A bad ref or empty diff fails here, not inside three reviewers. Team mode →
+      shut teammates down first, so nothing is still writing while the reviewers read.
+   2. **User review** — present an overall diff overview; ask whether anything needs adjustment (yes → Phase 3,
       then back here).
-   2. **Kick off the cross-check (gated, background) — apply `crosscheck`.** Pre-flight
+   3. **Run the two axes in parallel** — separate contexts, so neither pollutes the other:
+      - **Standards** — `/agent-skills:review` over the build (correctness, readability, architecture,
+        security, performance), carrying `~/.claude/references/my-workflow/smells.md` as its baseline.
+      - **Spec** — the `spec-reviewer` subagent, seeded with the **target and the diff only** — never your own
+        conclusions about the build. It answers the one question the five axes never ask: did we build what was
+        ordered?
+   4. **Kick off the cross-check (gated, background) — apply `crosscheck`.** Pre-flight
       `/<tool>:status` (no per-task rescue still in flight), then background **one** `/<tool>:review
-      --scope branch` over the whole build diff (working-tree scope if still uncommitted). **Once,
-      never per task.** It runs while you do the retrospective. Gate skip / neither tool available →
-      note it and skip.
-   3. **Full retrospective** — `/agent-skills:review` over the whole build (correctness, readability,
-      architecture, security, performance). This overlaps the background cross-check review.
-   4. **Barrier & address findings — apply `crosscheck`.** Collect the cross-check review
-      (`/<tool>:status` → `/<tool>:result`); merge/dedup its findings with the retrospective's,
-      spot-checking large findings against source (Step 7). **STOP and ask the user which to fix**
-      (never auto-apply), then fix the real issues and re-verify (Phase 3) before finalizing.
+      --scope branch` over the whole build diff. **Once, never per task.** It runs while the two axes do.
+      Gate skip / neither tool available → note it and skip.
+   5. **Barrier & address findings.** Collect all three (`/<tool>:status` → `/<tool>:result` for the
+      cross-check). Report **Standards and Spec side by side under their own headings — never merged, never
+      re-ranked across axes.** A change can pass one axis and fail the other; merging lets the clean axis mask
+      the failing one. Fold the cross-check's findings into whichever axis they belong to. Spot-check large
+      findings against source (`crosscheck` Step 7), then **STOP and ask the user which to fix** (never
+      auto-apply), fix the real issues, and re-verify (Phase 3) before finalizing.
 6. **Ask whether to run `/my-ship` now.** If yes, continue into `/my-ship` with this target.

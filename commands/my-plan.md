@@ -1,43 +1,21 @@
 ---
-description: Refine a spec's Design Details and fill its Test Plan (KEP format) via task breakdown — writes back the spec only
-argument-hint: [spec title or path] [--assist codex|kimi]
+description: Break a spec into a tracer-bullet task DAG with blocking edges and owned paths, and fill its Test Plan. Writes back the spec only.
+argument-hint: "[spec title or path] [--assist codex|kimi]"
 ---
 
 # /my-plan
 
 Refine the plan inside a spec: **$ARGUMENTS**
 
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
-
 This command **only ever writes back the one spec file** — no other edits. Stay read-only otherwise.
 
-- **Language.** Talk to the user in their configured language; write the spec in **English**.
+- **Language.** Write the spec in **English**; talk to the user in their configured language.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-- **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
-  spec / `CLAUDE.md` / repo; retire what this work supersedes.
-- **Planning mindset** — deliberate, not a race:
-  - See clearly first — read the requirement *and* the current code before deciding.
-  - Write down what you're sure of *and* what you're not; revise as you learn (no one-shot perfect pass).
-  - Keep the plan legible; when stuck or backtracking, check related past specs in `specs/` and `.claude/specs/`
-    first; resolve uncertainty with a test where you can, else ask.
-  - After each new piece, re-read the earlier parts so the whole stays self-consistent.
 
 ## Phase 1 — Resolve the spec
 
-1. Resolve from `$ARGUMENTS` (`specs/` committed or `.claude/specs/` local — search both):
-   - path / full filename → as-is.
-   - bare title → match `{specs,.claude/specs}/*-<title>.md` (date/issue prefix); also legacy `<dir>/<title>.md`.
-     Several → list and ask.
-   - empty → exactly one spec across the two dirs → use it; else list and ask.
-2. **Missing file → stop and hand back to `/my-spec`** to initialize it first (offer to run it now). Don't
-   fabricate a spec here.
-3. `Status:` is a lifecycle trace, **not** a gate — judge state from content (spec exists; its Plan/Test
-   placeholders). If it contradicts content, trust content and fix the line in passing.
+Resolve `$ARGUMENTS` per `~/.claude/references/my-workflow/resolve-target.md` (specs only — `specs/` committed
+or `.claude/specs/` local).
 
 ## Phase 2 — Re-ground (read-only)
 
@@ -62,6 +40,9 @@ This command **only ever writes back the one spec file** — no other edits. Sta
 
 ## Phase 3 — Plan the implementation (Design Details)
 
+**Work every design fork through `~/.claude/references/my-workflow/decisions.md`** — recommendation first,
+maintenance bill priced, one decision at a time. The forks here carry the largest bills in the whole workflow.
+
 Deepen the spec's **Design Details**:
 
 - Sharpen **Commands / Project Structure / Code Style** with concrete specifics grounded in the codebase and the
@@ -69,21 +50,57 @@ Deepen the spec's **Design Details**:
   remote, the access method: host / SSH / kubectl context / container) — and **confirm it with the user**
   (pivotal: it decides how every command runs). A **read-only smoke check** (invoke build/test once to confirm
   the environment is reachable) is fine — write no code, keep artifacts out of the tree.
-- **Fill the Implementation Plan** (replace its TODO) with:
-  - the dependency graph between components;
-  - work sliced **vertically** — one complete path per task, not horizontal layers;
-  - each task a **`[ ]` checkbox line** carrying **acceptance criteria + verification steps**;
-  - an order where every step leaves the system working, with **checkpoints** between phases.
+- **Fill the Implementation Plan** (replace its TODO) as a **task DAG** — see the task shape below.
+- **Prefactor first.** "Make the change easy, then make the easy change." Where a small structural change makes
+  the feature tasks simpler, order it as its own task ahead of everything it serves.
 - **Flag risks as you plan** — **compatibility** (breaking changes, version skew, migrations) or **reliability**
   (data loss, races, failure modes). **Raise with the user before locking in**; if agreed, record in **Risks and
   Mitigations** as `Risk → Mitigation`.
-- **De-risk the hard parts first (PoC).** For key/difficult items (uncertain feasibility, or Risk-flagged),
-  confirm the environment (see Commands), then **order a small PoC / spike as the first task(s)**. Validating the
-  riskiest assumptions early keeps the spec from churning late (→ small `/my-ship` history fold). `/my-build`
-  runs these first.
 - **Reconcile upstream when planning contradicts it.** A **Goal / Feature / User Story** infeasible or wrong
   against the real code → don't plan around it; raise it, then fix the upstream statement at its source. Never
   leave a stale Goal/Feature above the plan.
+
+### The task shape
+
+Every task is a **tracer bullet** — a narrow but *complete* path through every layer it touches (schema, API,
+UI, tests), demoable on its own, sized to fit one fresh context window. Not a horizontal slice of one layer.
+
+```markdown
+- [ ] **T2 · Login tracer bullet**
+      Blocked by: T1
+      Owns: `src/auth/login/**`, `tests/auth/login/**`
+      Gate: review
+      Acceptance: <concrete, testable>
+      Verify: <the exact command>
+```
+
+- **`Blocked by:`** — the task ids that must land before this one can start, or `None`. These edges are what
+  turn a linear stack into a DAG; `/my-build` reads them to decide what can run at the same time. An edge that
+  isn't a genuine dependency costs real parallelism — don't add one for narrative order.
+- **`Owns:`** — the paths this task exclusively touches, as globs (globs age better than line numbers). Two
+  tasks whose `Owns:` intersect can never run in parallel, so draw them disjoint wherever the work allows.
+- **`Gate: review`** — mark **only** tasks that fire a `crosscheck` Step 1 trigger: Risk-flagged, a PoC/spike,
+  or touching exported/shared symbols. No mark means the task is safe to build unattended. Don't invent new
+  criteria; reuse that gate.
+- **`Acceptance` / `Verify`** — what "done" means, and the command that proves it. A worker building this task
+  cold has only these two lines to judge itself by.
+
+Order so every task leaves the system working, with **checkpoints** between phases.
+
+**De-risk first (PoC).** For items with uncertain feasibility or a Risk flag, confirm the environment (see
+Commands), then order a small PoC / spike as the first task(s), `Gate: review` marked. Validating the riskiest
+assumptions early keeps the spec from churning late (→ small `/my-ship` history fold). `/my-build` runs these
+first.
+
+**Wide refactors are the exception to tracer bullets.** A **wide refactor** is one mechanical change — rename a
+column, retype a shared symbol — whose **blast radius** fans across the codebase, so a single edit breaks
+thousands of call sites and no vertical slice can land green. Sequence it as **expand–contract** instead:
+
+1. **Expand** — add the new form beside the old, so nothing breaks. One task, blocks all the rest.
+2. **Migrate** — move call sites over in batches sized by blast radius (per package, per directory). Each batch
+   is its own task, `Blocked by:` the expand, with the batch's paths as its `Owns:`. CI stays green batch to
+   batch because the old form still exists — and disjoint `Owns:` means the batches parallelize.
+3. **Contract** — delete the old form once no caller remains. `Blocked by:` every migrate batch.
 
 ## Phase 4 — Fill the Test Plan (KEP format)
 
@@ -117,7 +134,12 @@ code solid enough prior to committing the changes necessary to implement this en
 
 ## Phase 5 — Review & write back
 
-1. Present the proposed spec changes (enriched Design Details + filled Test Plan) for **human review**.
+1. Present the proposed spec changes (enriched Design Details + filled Test Plan) for **human review**. Put two
+   questions to the user alongside the diff — they are what make the DAG trustworthy:
+   - **Is the granularity right?** Any task too coarse to fit one context window, or so fine the overhead
+     outweighs it?
+   - **Are the blocking edges real?** Does each `Blocked by:` name a genuine dependency, or just narrative
+     order? A false edge silently serializes work that could have run in parallel.
 2. **Wait for explicit confirmation** — the one pivotal question of this command.
 3. On approval, write the changes back and **set `Status:` to `Planned`** (add it under the title if missing).
    **Modify no other file.**
@@ -125,13 +147,9 @@ code solid enough prior to committing the changes necessary to implement this en
    Plan you just wrote; reconcile any upstream statement the plan now contradicts. The spec must read cleanly
    top-to-bottom — clear, logical, self-consistent.
 5. **Offer the next step** (user may decline both and stop):
-   - **Compact, then build** — context heavy / want a clean slate. Emit one copyable block (English):
-     `/compact <focus>`, then `/model opus` (build's executor — suggest `/model sonnet` instead when the plan is
-     fully specified and low-risk), then `/my-build <title>`. Switching right after compaction keeps the
-     model-switch re-read minimal (prompt caches are per-model). Focus **keeps:** target spec path, finalized
-     Implementation Plan (tasks + acceptance) + Test Plan, reusable codebase landings (files / functions /
-     patterns with paths), flagged Risks → Mitigations, next step `/my-build <title>`; **drops:** verbose
-     exploration / grep transcripts and superseded drafts. `/my-build` re-resolves the spec from disk, so it
-     resumes cleanly after compaction.
+   - **Compact, then build** — context heavy / want a clean slate. Emit the three-line block per
+     `~/.claude/references/my-workflow/compaction.md` (its `/my-plan` focus row).
    - **Build now** — continue straight into `/my-build` with this spec, keeping the current model (switching
      without compacting re-reads the full context — only suggest it if the user asks).
+   - Either way, mention `team` when the DAG has parallelizable tasks (two or more unblocked tasks with
+     disjoint `Owns:`): `/my-build <title> team` builds them concurrently.

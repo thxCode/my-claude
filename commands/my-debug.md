@@ -1,18 +1,11 @@
 ---
-description: Diagnose a bug and plan its fix — root-cause it (codex/kimi adversarial cross-check when complex), then write a debug artifact (Background / PoC / Fix Plan / Test Plan) to .claude/debugs/; hands off to /my-build
-argument-hint: [bug description, error, or repro] [--assist codex|kimi]
+description: Root-cause a bug and write a fix plan to .claude/debugs/, then hand off to /my-build. The lightweight local lane for a bug that needs no tracked spec.
+argument-hint: "[bug description, error, or repro] [--assist codex|kimi]"
 ---
 
 # /my-debug
 
 Diagnose and plan a fix for: **$ARGUMENTS**
-
-```
-my-spec-from-issue ┐
-                   ├─ my-spec → my-plan → my-build → my-ship
-(direct ask) ──────┘                        ↑
-my-debug ───────────────────────────────────┘   (bug quick-fix lane)
-```
 
 Like `/my-plan`, this command **only writes one artifact** — a debug doc under `.claude/debugs/` — then hands to
 `/my-build`. Stay read-only otherwise (only Phase 5 writes).
@@ -20,10 +13,8 @@ Like `/my-plan`, this command **only writes one artifact** — a debug doc under
 **Lane vs `/my-spec`.** `/my-debug` is the **lightweight, local** bug lane (throwaway artifact → build). A bug
 that deserves a **versioned, tracked** spec goes through `/my-spec`'s Bug-fix path instead.
 
-- **Language.** Talk to the user in their configured language; write the artifact in **English**.
+- **Language.** Write the artifact in **English**; talk to the user in their configured language.
 - **Source lookup.** Read/trace source: **GitNexus** (if available) → **DeepWiki** → `grep`/`find`.
-- **Memory.** Capture durable, non-obvious learnings (project constraints, user habits); don't duplicate the
-  repo / `CLAUDE.md`; retire what this work supersedes.
 
 ## Artifact — `.claude/debugs/<yyyy-mm-dd>-<title>.md`
 
@@ -103,9 +94,6 @@ This IS /my-build's task list.>
 3. Write `.claude/debugs/<yyyy-mm-dd>-<title>.md` (`date +%Y-%m-%d`; create the dir; **never stage it**). Confirm
    the saved path.
 4. **Offer the next step** (user may decline both):
-   - **Compact, then build** — emit one copyable block (in English): `/compact <focus>`, then `/model opus`
-     (build's executor — `/model sonnet` when the fix is small and well-patterned), then `/my-build <title>`.
-     Switching right after compaction keeps the model-switch re-read minimal (prompt caches are per-model).
-     Focus **keeps:** artifact path, Fix Plan (tasks + acceptance) + Test Plan, reusable codebase landings
-     (paths), the Root Cause, next step `/my-build <title>`; **drops:** verbose debugging transcripts.
+   - **Compact, then build** — emit the three-line block per
+     `~/.claude/references/my-workflow/compaction.md` (its `/my-debug` focus row).
    - **Build now** — continue into `/my-build` with this artifact as its target, keeping the current model.

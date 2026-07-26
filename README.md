@@ -74,20 +74,45 @@ crawl4ai-setup
 crawl4ai-doctor
 ```
 
+### 8. Agent Teams (optional)
+
+Lets `/my-build`'s `team` mode use real teammates — a shared task list with native dependency unblocking, direct teammate-to-teammate messaging, and a plan-approval gate for risky tasks — instead of falling back to parallel subagents. Experimental and off by default; add to `settings.json`:
+
+```json
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
+```
+
+> Known limits: teammates don't survive `/resume` or `/rewind`, task status can lag, all teammates inherit the lead's permission mode at spawn, and token use scales with teammate count. `/my-build` works without this — it says which path it's running.
+
 ## Commands
 
 Custom slash commands live in [`commands/`](commands).
 
 - **`/my-spec [what you want to build or fix]`** — Spec-driven development: gathers project/code context, judges intent (feature → user-story refinement; bug → read-only root-cause), then writes a KEP-style spec — committed to `specs/<yyyy-mm-dd>-<title>.md`, or tracked locally (never committed) under `.claude/specs/` if you choose.
 - **`/my-spec-from-issue [github issue number or URL]`** — Issue-driven entry to the spec family: reads a GitHub issue (body + comments) from the current repo's upstream, distills it into a requirement, then hands off to `/my-spec` carrying the issue number — saving the spec as `<issue-number>-<title>.md` under the chosen tracking dir (`specs/` or `.claude/specs/`).
-- **`/my-plan [spec title]`** — Deepens a spec's Design Details and fills its Test Plan (KEP format) via task breakdown; after your review, writes back the spec only.
+- **`/my-plan [spec title]`** — Deepens a spec's Design Details and fills its Test Plan (KEP format), breaking the work into a **tracer-bullet task DAG**: each task is a complete vertical path annotated with `Blocked by:` (its real dependencies), `Owns:` (the paths it exclusively touches), and `Gate: review` on the risky ones. Those annotations are what let `/my-build` run independent tasks in parallel. Wide refactors are sequenced expand–contract instead. After your review, writes back the spec only.
 - **`/my-debug [bug description, error, or repro]`** — Lightweight bug-fix lane: reproduces and root-causes a bug (with a codex/kimi adversarial cross-check when it's complex), then writes a single throwaway debug artifact (Background / PoC / Root Cause / Fix Plan / Test Plan) to `.claude/debugs/<yyyy-mm-dd>-<title>.md` (always local, never committed) and hands off to `/my-build`. The quick counterpart to `/my-spec`'s tracked Bug-fix path.
-- **`/my-build [spec title]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions) on a dedicated branch (`spec/<title>` for features, `fix/<title>` for bug fixes); commits per task (confirm each, or auto-chain in auto/bypass mode), then runs a full end-of-build review.
+- **`/my-build [spec title] [auto|team]`** — Implements a spec's Design Details task by task (TDD + incremental, conforming to project conventions) on a dedicated branch (`spec/<title>` for features, `fix/<title>` for bug fixes); commits per task, then runs the end-of-build review. Three run modes: **per-task confirm** (default), **`auto`** (chains without pausing), and **`team`** — builds the DAG's independent tasks in parallel via [Agent Teams](#8-agent-teams-optional) when enabled, or parallel subagents when not. In `team` mode the lead never writes code and owns every commit; tasks marked `Gate: review` are spawned under plan approval and **their plan is relayed to you** before any code is written.
 - **`/my-ship [spec title]`** — Finalizes a spec: optional e2e tests (writing fixes back to spec + the cheapest appropriate test coverage), refreshes the overview, and updates docs/ADRs; conforms to project conventions.
+
+The end-of-build review runs **two axes side by side, never merged**: **Standards** (`agent-skills:review`'s five dimensions plus a Fowler smell baseline — *is this code good?*) and **Spec** (`spec-reviewer` — *is this what was asked for?*). A change can pass one and fail the other, so merging them lets the clean axis mask the failing one. A gated codex/kimi cross-check is the optional third voice.
+
+## Agents
+
+Subagent definitions live in [`agents/`](agents). Four narrow contracts rather than one broad one — each says plainly what it will *not* do, so the boundaries hold under delegation.
+
+| Agent | Does | Never |
+| --- | --- | --- |
+| **`task-worker`** | Implements one task from a planned task list end-to-end, TDD, confined to the paths the task `Owns:`. `/my-build`'s `team` lane executor. | Commits, takes design decisions, or edits outside its owned paths |
+| **`spec-reviewer`** | Reviews a diff against the spec that ordered it — missing requirements, scope creep, requirements implemented wrong. Cites the spec line for every finding. | Edits anything, or judges code quality (that's the other axis) |
+| **`fast-worker`** | Mechanical write-capable recipes — boilerplate, bulk formatting, scaffolding — driven by an explicit recipe. | Makes judgment calls, commits, or renders test verdicts |
+| **`test-worker`** | Runs a bounded test recipe (suite command or browser flows) and reports pass/fail with evidence. | Edits project files or fixes what it finds |
 
 ## Skills
 
 Custom skills live in [`skills/`](skills); Claude invokes them automatically when a task matches, or you can call one explicitly (e.g. `/auto-research`).
+
+Shared reference the `my-*` commands read on demand lives in [`references/my-workflow/`](references/my-workflow) — target resolution, compaction focus, the decision gate, the smell baseline, and the parallel team lane. Plain files, not skills: they cost nothing until a command points at them.
 
 - **`address-pr-review`** — Consumes the review comments **already left** on a PR: triages each one against the source (real bug vs. false positive), fixes the real ones surgically, folds the fixes into the right commit to keep history clean, then replies to / resolves the threads. The counterpart to skills that *generate* a review.
 - **`auto-research`** — Autonomous research harness: decomposes a topic, fans out web searches, adversarially verifies every claim against its source, then synthesizes a Perplexity-style cited report at `.claude/reports/<title>.md`. Cost-aware (throttles on rate-limit usage) and observable (per-round digest). After showing the plan it runs unattended (**auto mode**) or pauses for per-round approval (**manual-approve mode**).
