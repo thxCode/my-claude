@@ -11,8 +11,7 @@ The issue-driven entry to the spec family. Its only job: **read the issue, disti
 off to `/my-spec`** carrying the issue number. All the real spec work happens in `/my-spec` — don't duplicate its
 phases here.
 
-**Language.** Everything written into the spec stays **English** (handled by `/my-spec`); talk to the user in
-their configured language.
+**Language.** Talk to the user in their configured language; `/my-spec` handles the spec's English.
 
 ## Phase 1 — Resolve & read the issue
 

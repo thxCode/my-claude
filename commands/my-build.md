@@ -10,8 +10,7 @@ Build the target: **$ARGUMENTS**
 Implement the **task list**. Output must conform to the project's conventions — the target's **Code Style** &
 **Boundaries**, `CLAUDE.md`, and surrounding code. **Verify before you commit.**
 
-**Target** = a **spec** (`specs/` committed, or `.claude/specs/` local) or a **debug artifact** (`.claude/debugs/`,
-always local). **Task list** = a spec's **Implementation Plan** / a debug artifact's **Fix Plan**.
+**Task list** = a spec's **Implementation Plan** / a debug artifact's **Fix Plan**.
 
 - **Language.** Write target edits (idea write-ins, task check-offs) in **English**; for other artifacts (code,
   comments, commits, docs) follow the project's conventions; talk to the user in their configured language.
@@ -50,14 +49,13 @@ always local). **Task list** = a spec's **Implementation Plan** / a debug artifa
    | **Auto-chain** | session in `acceptEdits`/`bypassPermissions`, **or** `auto` token passed | only compaction (5.3) + final review (5.5) |
    | **Per-task confirm** (default) | every other case | pauses before each commit |
 
-   State the chosen run mode **and** the tracking mode (committed if under `specs/`; local if under
-   `.claude/specs/` or `.claude/debugs/`) in your first message.
+   State the chosen run mode **and** the tracking mode in your first message.
 
    **Team mode → read `~/.claude/references/my-workflow/team-lane.md` now and follow it in place of Phase 3's
    one-task-at-a-time sequencing.** Everything else in this command still applies. `team` passed but the task
    list has no `Blocked by:` / `Owns:` → don't improvise a DAG: say so, recommend `/my-plan` to annotate it,
    and offer per-task confirm instead.
-5. **Backbone (inline discipline):** one **tracer bullet** at a time, never big-bang; drive with TDD (RED →
+5. **Backbone (inline discipline):** **tracer bullets**, never big-bang; drive with TDD (RED →
    GREEN → keep suite green; loop in Phase 3). **PoC/spike front-loaded?** (risky items ordered first) build it first;
    if it overturns a Goal/Feature/design, reconcile the target **now** at its source (Phase 3.5) while churn is
    cheap — keeps `/my-ship`'s history folding small.
@@ -128,7 +126,7 @@ Depth matches the task's risk:
 
 1. **Gate by run mode** once reviewed & verified:
    - **Per-task confirm** → present the task and **wait for confirmation** before committing.
-   - **Auto-chain** → skip the pause; commit and continue.
+   - **Auto-chain / Team** → skip the pause; commit and continue.
 2. **Record → stage → commit**, in order:
    - **Record:** check off `[x]` in the task list **and advance `Status:` in the same edit** — `Building` while
      tasks remain, `Built` when this was the last.
@@ -151,7 +149,7 @@ Depth matches the task's risk:
    `~/.claude/references/my-workflow/compaction.md` (its `/my-build` row and threshold).
 4. Back to Phase 3 for the next task. All done (`Status: Built`) → **summarize:** tasks completed, tests added,
    commits made, anything skipped / flagged / left for the user.
-5. **End-of-build review** (all modes — auto-chain and team skip only the *per-task* gate, not this):
+5. **End-of-build review** (all modes):
    1. **Pin the scope, fail fast.** Resolve the base and confirm `git diff <base>...HEAD` is non-empty (working
       tree if still uncommitted). A bad ref or empty diff fails here, not inside three reviewers. Team mode →
       shut teammates down first, so nothing is still writing while the reviewers read.

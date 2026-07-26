@@ -48,7 +48,6 @@ This IS /my-build's task list.>
 ## Phase 1 — Frame the bug (read-only)
 
 - Collect the symptom / error / repro hints from `$ARGUMENTS` and context.
-- Make **no edits** until Phase 5.
 - **Kick off the adversarial diagnosis early (gated, background) — apply `crosscheck`.** If the
   framing already shows complexity (multi-component, intermittent, high-risk, or an obviously
   non-obvious cause), background a **read-only** rescue subagent (`codex:codex-rescue` or
@@ -64,8 +63,7 @@ This IS /my-build's task list.>
 | `gitnexus-debugging` | invoke it first |
 | otherwise | `agent-skills:debugging-and-error-recovery` |
 
-**Reproduce reliably first, then localize.** Fix the underlying cause, not where it manifests. (Same routing as
-`/my-spec`'s Bug-fix path.)
+**Reproduce reliably first, then localize.** Fix the underlying cause, not where it manifests.
 
 ## Phase 3 — Adversarial cross-check (complexity-gated)
 

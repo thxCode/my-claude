@@ -1,17 +1,11 @@
 # Team lane — building the task DAG in parallel
 
-Loaded by `/my-build` Phase 2 **only** when the `team` token was passed and the task list carries
-`Blocked by:` / `Owns:` annotations. Everything else in `/my-build` still applies — this replaces the
-one-task-at-a-time sequencing of Phase 3 and nothing else.
-
 Parallelism here buys wall-clock, not correctness. Every guard below exists because a parallel build fails in
 ways a sequential one can't: two workers overwriting one file, a task started before its blocker landed, a
 design decision taken by a worker that had no standing to take it.
 
 ## 1. Preconditions
 
-- **No DAG → don't improvise one.** A task list without `Blocked by:` / `Owns:` can't be parallelized safely.
-  Say so, recommend `/my-plan` to annotate it, and offer to continue in **per-task confirm** mode instead.
 - **Probe the switch:** is `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set to `1`?
   - **Set** → the **Agent Teams path** below.
   - **Unset** → the **fallback path** below. Say plainly which path is running and why, and show the one-line
@@ -43,8 +37,7 @@ Re-compute the frontier each time a task lands.
 | no `Gate:` | `task-worker`, **sonnet** | none — runs to completion |
 | `Gate: review` | `task-worker`, **opus** | plan approval, **relayed to the user** |
 
-A **`Gate: review`** task is one `/my-plan` marked as Risk-flagged, a PoC/spike, or touching exported/shared
-symbols. Spawn it with plan approval required, so it works read-only until its approach is approved. Then:
+Spawn a gated task with plan approval required, so it works read-only until its approach is approved. Then:
 
 **Relay the plan to the user verbatim and wait for their answer before approving it.** Agent Teams has the lead
 approve teammate plans autonomously by default — that default is wrong here. The whole point of the gate is
@@ -84,5 +77,4 @@ Same DAG, same frontier rule, same lead discipline — only the workers differ:
 ## 6. Finishing
 
 When the frontier is empty and every task is `[x]`, the team lane is done. Hand back to `/my-build` Phase 5.4
-onward — summary, then the end-of-build review — unchanged. Shut down teammates before the review so nothing is
-still writing while it reads the diff.
+onward — summary, then the end-of-build review — unchanged.

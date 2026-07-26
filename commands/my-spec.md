@@ -21,7 +21,7 @@ Build enough understanding to write a grounded spec (following the Source-lookup
 - **Code** — `gitnexus-exploring` if available, else `grep`/`find`. GitNexus returns nothing (index
   missing/stale) → **ask permission**, then `gitnexus-cli` → `analyze --index-only` (`--embeddings` only on the
   default branch; omit on a feature branch to preserve default-branch embeddings), and retry.
-- **Broad sweeps** (at the `grep`/`find` tier — GitNexus stays first when available) — multi-file inventories,
+- **Broad sweeps** (at the `grep`/`find` tier) — multi-file inventories,
   usage surveys, naming-convention scans → delegate to the built-in **Explore** subagent, conclusions only
   (keeps the main context lean); pivotal files you still read yourself.
 - **External libs/frameworks** not in the dependency tree — **DeepWiki**; JS-rendered doc DeepWiki can't reach →

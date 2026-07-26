@@ -19,23 +19,22 @@ or `.claude/specs/` local).
 
 ## Phase 2 — Re-ground (read-only)
 
-1. **Strictly read-only** — the only write is the Phase 5 write-back.
-2. Re-read the spec end-to-end.
-3. Re-ground the design in the real codebase: `gitnexus-exploring` if available, else `grep`/`find`. External
+1. Re-read the spec end-to-end.
+2. Re-ground the design in the real codebase: `gitnexus-exploring` if available, else `grep`/`find`. External
    libs/frameworks not in the dependency tree → **DeepWiki**; a JS-rendered doc DeepWiki can't reach →
    `crawl4ai-search`. **Frontend** spec → a screenshot of the current rendered screen (`crawl4ai-search`, PNG to
    the scratchpad) keeps this phase read-only on project files. Broad sweeps (at the `grep`/`find` tier) —
    multi-file inventories, usage surveys, naming-convention scans → delegate to the built-in **Explore**
    subagent, conclusions only (keeps the main context lean); pivotal files you still read yourself.
-4. **Learn the build/package system** — `Makefile` / build scripts, `package.json` scripts, CI config, any
+3. **Learn the build/package system** — `Makefile` / build scripts, `package.json` scripts, CI config, any
    **overview** / **development** docs: exactly how it builds, tests, lints, packages. This grounds **Commands**
    in Phase 3 (what the project actually uses, not guesses). Reading only.
-5. **Kick off a design cross-check (gated, background) — apply `crosscheck`.** As early as
-   item 2 lets you, if the gate authorizes (novel / high-stakes / Risk-flagged design), background a
+4. **Kick off a design cross-check (gated, background) — apply `crosscheck`.** As early as
+   the re-read lets you, if the gate authorizes (novel / high-stakes / Risk-flagged design), background a
    **read-only** rescue subagent (`codex:codex-rescue` or `kimi:kimi-rescue`, per the selected
    toolchain) seeded from the spec's **existing Proposal / Goals / Design Details** (the raw design
    intent, *not* your refinements) to red-team the approach and surface design risks + test scenarios.
-   It runs while you re-ground (items 3–4) and draft Phase 3 — an independent second voice, one turn,
+   It runs while you re-ground (items 2–3) and draft Phase 3 — an independent second voice, one turn,
    no wait. Gate skips (or neither tool available) → note it and move on. Collect it at Phase 4.
 
 ## Phase 3 — Plan the implementation (Design Details)
@@ -80,8 +79,8 @@ UI, tests), demoable on its own, sized to fit one fresh context window. Not a ho
 - **`Owns:`** — the paths this task exclusively touches, as globs (globs age better than line numbers). Two
   tasks whose `Owns:` intersect can never run in parallel, so draw them disjoint wherever the work allows.
 - **`Gate: review`** — mark **only** tasks that fire a `crosscheck` Step 1 trigger: Risk-flagged, a PoC/spike,
-  or touching exported/shared symbols. No mark means the task is safe to build unattended. Don't invent new
-  criteria; reuse that gate.
+  or touching exported/shared symbols. No mark means the task can be dispatched to a parallel worker
+  unattended. Don't invent new criteria; reuse that gate.
 - **`Acceptance` / `Verify`** — what "done" means, and the command that proves it. A worker building this task
   cold has only these two lines to judge itself by.
 

@@ -110,10 +110,10 @@ Nothing warranted (de-dup skip, no changes, or neither tool available) → say s
      GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash <base>
      ```
    - Use `git blame <file>` / `git log --oneline -- <file>` to find which commit a fix belongs to.
-   - **Normalize task order — after a parallel (`team`) build only.** That lane commits in *completion* order,
-     so the log can read `Task 1`, `Task 3`, `Task 2`. Every ordering is valid (parallel tasks own disjoint
-     paths), but the PR should read in the plan's order. Once folding is done, reorder by the `Task N of`
-     trailer — that same disjointness is what makes this conflict-free:
+   - **Normalize task order — only when the `Task N of` trailers aren't ascending.** A parallel (`team`) build
+     commits in *completion* order, so the log can read `Task 1`, `Task 3`, `Task 2`. Every ordering is valid
+     (parallel tasks own disjoint paths), but the PR should read in the plan's order. Reorder by the trailer
+     once folding is done — that same disjointness is what makes it conflict-free:
      ```bash
      TODO=$(mktemp)
      git log --reverse --format='%h' <base>..HEAD | while read h; do
@@ -125,7 +125,6 @@ Nothing warranted (de-dup skip, no changes, or neither tool available) → say s
      Commits with no trailer (ship's own finalization commits) sort last, keeping their relative order.
      **A conflict here means `Owns:` overlapped and the tasks were never truly independent** — `git rebase
      --abort`, keep completion order, and surface it: that overlap is a worse finding than the ordering.
-     Sequential builds already commit in order — skip this.
 6. **Ask whether to push the branch and open a PR.** If yes, push and create it.
    - **PR body — learn the upstream template first.** Look (case-insensitive, in order) for
      `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`,
@@ -138,7 +137,6 @@ Nothing warranted (de-dup skip, no changes, or neither tool available) → say s
      `git fetch origin <branch>`, then `git rev-list --left-right --oneline HEAD...FETCH_HEAD` (any `>` lines =
      remote-only commits → STOP and surface). Push with `--force-with-lease` pinned to the fetched SHA — never a
      bare `--force`.
-   - Target-driven: the target is already `Shipped`, so nothing to write back afterward.
 7. **Refresh the GitNexus knowledge graph** (only if the project uses GitNexus). Invoke `gitnexus-cli` to run
    `analyze --index-only`, syncing the graph to the shipped code (add `--embeddings` **only on the default
    branch**; on a feature branch — where ship normally runs — omit it to preserve the default-branch embeddings,
