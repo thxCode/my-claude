@@ -1,4 +1,5 @@
 ---
+name: my-build
 description: Build a planned spec or debug artifact task by task — TDD, commit per task. `auto` chains unattended; `team` builds independent tasks in parallel.
 argument-hint: "[spec/debug title or path] [auto|team] [--assist codex|kimi]"
 ---

@@ -1,4 +1,5 @@
 ---
+name: my-spec
 description: Write a KEP-style spec before coding — saves to specs/. Use to start a feature, spec out an idea, or open a tracked bug fix.
 argument-hint: "[what you want to build or fix]"
 ---

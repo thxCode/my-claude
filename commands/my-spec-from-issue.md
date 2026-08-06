@@ -1,4 +1,5 @@
 ---
+name: my-spec-from-issue
 description: Turn a GitHub issue into a spec — hands off to /my-spec carrying the issue number.
 argument-hint: "[github issue number or URL]"
 ---

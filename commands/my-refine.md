@@ -1,4 +1,5 @@
 ---
+name: my-refine
 description: Audit a command, skill, or the whole my-* family for cross-file conflicts and prunable text, then apply the agreed edits and verify them mechanically.
 argument-hint: "[path to a command/skill/reference, or nothing for the whole my-* family]"
 disable-model-invocation: true

@@ -1,4 +1,5 @@
 ---
+name: my-plan
 description: Break a spec into a tracer-bullet task DAG with blocking edges and owned paths, and fill its Test Plan. Writes back the spec only.
 argument-hint: "[spec title or path] [--assist codex|kimi]"
 ---

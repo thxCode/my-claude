@@ -1,4 +1,5 @@
 ---
+name: my-ship
 description: Finalize and ship a branch — e2e, docs and ADRs, tidy history, open a PR. Target-optional.
 argument-hint: "[spec/debug title or path, or nothing to ship the current branch] [--assist codex|kimi]"
 ---
