@@ -14,8 +14,14 @@ design decision taken by a worker that had no standing to take it.
     ```json
     { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
     ```
+- **Probe the pane backend:** is `TMUX` or `ORCA_AGENT_TEAMS_TEAM_ID` set? Set → teammates open as real
+  panes (inside Orca, as ADE windows). Unset → the switch still works, but every teammate runs
+  **in-process**. Say which one before spawning, so nobody waits on windows that aren't coming.
 - **Tell the user before spawning:** teammates don't survive `/resume` or `/rewind`. A build interrupted
   mid-team resumes from the target file and git, with a fresh team.
+- **A pane that fails once stays failed.** On `Couldn't open a teammate pane — running in-process instead`,
+  the session is latched to in-process for the rest of its life. Finish this build in-process and say so;
+  only a new session gets panes back.
 
 ## 2. The frontier
 
@@ -36,6 +42,14 @@ Re-compute the frontier each time a task lands.
 | --- | --- | --- |
 | no `Gate:` | `task-worker`, **sonnet** | none — runs to completion |
 | `Gate: review` | `task-worker`, **opus** | plan approval, **relayed to the user** |
+
+**Spawn contract — miss any of these and you silently get a plain subagent instead of a teammate:**
+
+- **Pass `name`** — the task id (`task-3`). This is what makes it a teammate at all. Omit it and the Agent
+  tool builds an in-process subagent no matter what the switch says. It's also the handle `SendMessage`
+  needs, so the name has to survive in your notes.
+- **Don't pass `isolation`** — not even `worktree`. Disjoint `Owns:` already does the isolating, and
+  `isolation` drops the spawn back to a subagent.
 
 Spawn a gated task with plan approval required, so it works read-only until its approach is approved. Then:
 

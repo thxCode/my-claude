@@ -3,7 +3,8 @@ name: crosscheck
 description: >-
   Decision procedure for spending a second-opinion toolchain — Codex (GPT-5.x) or Kimi (K2/K3) —
   anywhere in a session: the my-* command family (/my-plan, /my-debug, /my-build, /my-ship) is the
-  primary consumer, and ad-hoc use outside it is governed too. Consult BEFORE any Codex/Kimi use.
+  primary consumer, and ad-hoc use outside it is governed too. Consult BEFORE any read-only Codex/Kimi
+  use; full ownership handoffs (`/my-handoff`) are out of scope.
   Decides whether the change/plan/bug is complex enough to spend scarce quota, which
   toolchain to use (codex vs kimi), which vehicle (`<tool>-rescue` read-only vs /<tool>:review vs
   /<tool>:adversarial-review), background-vs-wait, how to sequence around the serializing broker, how
@@ -32,6 +33,10 @@ before any ad-hoc Codex/Kimi use outside them.
 **Ad-hoc use (outside my-* commands) — same discipline.** A user explicitly naming the tool ("ask codex", "ask kimi") counts as an explicit choice: Step 1's gate is passed and Step 1.5 binds that tool.
 Steps 3 (read-only framing), 5 (broker pre-flight, one job in flight) and 8 (never auto-fix) still
 apply in full.
+
+**Out of scope — `/my-handoff`.** Handing ownership to another agent in its own Orca window isn't a
+cross-check: that agent owns the edits, and there is no verdict to reconcile against Claude's. Nothing
+here applies to it. This gate governs **read-only second opinions**, where Claude keeps every edit.
 
 ## Step 0 — Availability (probe once per session)
 

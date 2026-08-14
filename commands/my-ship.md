@@ -127,11 +127,17 @@ Nothing warranted (de-dup skip, no changes, or neither tool available) → say s
      **A conflict here means `Owns:` overlapped and the tasks were never truly independent** — `git rebase
      --abort`, keep completion order, and surface it: that overlap is a worse finding than the ordering.
 6. **Ask whether to push the branch and open a PR.** If yes, push and create it.
-   - **PR body — learn the upstream template first.** Look (case-insensitive, in order) for
-     `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`,
-     `.github/PULL_REQUEST_TEMPLATE/*.md`, `docs/PULL_REQUEST_TEMPLATE.md`, root `PULL_REQUEST_TEMPLATE.md`.
-     - **Found** → adopt its sections/format; fill each. Complex content as **bullets** — concise, forceful.
+   - **PR body — write to the repo's PR template when it has one.** Find it:
+     ```bash
+     git ls-files | grep -i pull_request_template
+     ```
+     - **Found** → its headings **verbatim and in order**, every one filled, its machinery kept
+       (`/kind` lines, `Fixes #`, a fenced `release-note` block). A section with nothing to say gets an
+       explicit `NONE`. Complex content as **bullets** — concise, forceful.
      - **None** → fall back to the default body below.
+   - **Match the house style** — a template names the sections, not how this project fills them. Read the
+     latest merged PR (`gh pr list --state merged -L 1 --json body -q '.[0].body'`) for how much detail a
+     reviewer expects and which `/kind` labels are real.
    - **Content mapped into the body:** spec → Summary + completed task list; debug artifact → Background + Root
      Cause + completed Fix Plan; no target → derive from the tidied commit log + `base..HEAD` diff.
    - **Already pushed + step 5 rewrote history → force-push (outward-facing, confirm first):**
