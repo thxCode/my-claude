@@ -71,7 +71,7 @@ Start **all** independent workers, then wait. Waiting after each start serialize
 | Path | Placement | Agents |
 | --- | --- | --- |
 | `worker-start --task <id> --worktree current --agent <x>` | its own **tab** | anything Orca can launch, **including `kimi`** — the launcher knows what it started |
-| `terminal split --terminal <yours> --direction vertical --command "<cmd>"` → `terminal wait --for tui-idle` → `dispatch --task <id> --to <handle> --inject` | a **pane beside you** | only detectable ones: `claude`, `codex`, `gemini`, `droid`, `cursor`, `opencode`, `omp`, `pi`, `grok` |
+| `terminal split --terminal <yours> --direction vertical --command "<cmd>"` → `terminal wait --for tui-idle` → `dispatch --task <id> --to <handle> --inject` | a **pane beside you** — swap `split` for `terminal create --worktree …` to get a tab instead | only detectable ones: `claude`, `codex`, `gemini`, `droid`, `cursor`, `opencode`, `omp`, `pi`, `grok` |
 
 `dispatch --inject` has to *detect* the agent from the terminal's command string, so the binary must lead
 it: `codex --flags` works, `VAR=1 codex` doesn't. **kimi is not detectable** — it can only be a worker
@@ -85,9 +85,13 @@ watching: `codex --dangerously-bypass-approvals-and-sandbox`, `claude --dangerou
 blocks the local RPC `orca orchestration send` needs**, so a sandboxed worker does the whole task and
 then cannot report it.
 
-Since `worker-start` can't carry env vars, anything a worker needs from the environment belongs in the
-shell profile. **kimi self-updates on launch and that kills its own TUI mid-start** — the wreck below is
-what follows. `export KIMI_CODE_NO_AUTO_UPDATE=1` in `~/.zshenv` is the durable fix.
+`worker-start` carries **neither env vars nor argv** — only `--model` / `--effort`. So anything a worker
+needs from the environment belongs in the shell profile, and an agent whose non-interactive mode *is* an
+argv flag (claude, codex) can only be given it through the low-level path's `--command`. Whether Orca's
+configured default args already carry that flag is not readable from the CLI, so don't assume they do: on
+an unattended run, launch it yourself. **kimi self-updates on launch and that kills its own TUI
+mid-start** — the wreck below is what follows. `export KIMI_CODE_NO_AUTO_UPDATE=1` in `~/.zshenv` is the
+durable fix.
 
 The low-level path has one more cost: `worker-*` commands only manage dispatches created by
 `worker-start`. A `dispatch --inject` dispatch returns `dispatch_not_found` from `worker-stop` /
@@ -104,9 +108,34 @@ Both failures below are measured, not hypothetical, and Orca reports success for
   `worker_done` command inside it runs for real, sending a completion built entirely of placeholders —
   which Orca accepts, marking your task done.
 
-So `terminal read` after every start, before waiting on anything. You want the agent's own UI plus the
-TASK block. A shell prompt or `command not found` means **rebuild that worker** — don't dispatch into it
-again.
+So read the terminal back after every start, before waiting on anything — **from the top**:
+`terminal read --terminal <h> --cursor 0 --limit 40`. The default tail read starts at the latest cursor and
+a full-screen TUI's last line is blank, so it returns `tail: [""]` on a terminal that painted fine —
+indistinguishable from a TUI that never started (measured). From cursor 0 you get the banner, the agent's
+own UI, and the TASK block in one read. A shell prompt or `command not found` means **rebuild that
+worker** — don't dispatch into it again. The swallowed-preamble tell is subtler: the agent's UI is up and
+the task text sits in its composer **unsubmitted**, with the receipt still reading `input_accepted`.
+
+**`worker-start` is the path that races.** It owns the launch and the input with no gate you can widen
+between them, and on a fresh worktree its own receipt says `reused_agent_terminal` — it fed the terminal
+agent-first creation had opened a moment earlier. The low-level path *narrows* that window, because
+`terminal wait --for tui-idle` is a gate you control — it does not close it: a satisfied `tui-idle` still
+doesn't prove the TUI took the input. Only the read-back above does. So rebuild through the low-level
+path, then attach with `worker-start` so Orca still owns cleanup:
+
+```text
+orca orchestration worker-stop --dispatch <stalled_id>
+orca terminal create --worktree id:<full_worktree_id> --command '<agent> <non-interactive argv>'
+orca terminal wait --terminal <new_handle> --for tui-idle --timeout-ms 180000
+orca orchestration worker-start --task <id> --retry-of <stalled_id> \
+  --worktree id:<full_worktree_id> --terminal <new_handle>
+```
+
+`--retry-of` inherits **no** placement: omit `--worktree` and it falls back to *your* worktree and then
+rejects the terminal with `terminal_worktree_mismatch`. Pass both, and pass the worktree as the full
+`id:<repo-id>::<path>` selector. And **rebuild rather than re-send**: the preamble is an *injected
+dispatch* whose capability is bound to that attempt, so hand-typing the text back gets you a worker that
+can do the task and never report it.
 
 A nonzero exit from `worker-start` is a real failure — inspect `stage`, `effects`, `residualResources`.
 **Don't auto-retry**; a half-created worker plus a retry is two workers.

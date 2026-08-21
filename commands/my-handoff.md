@@ -51,8 +51,8 @@ watching: `codex --dangerously-bypass-approvals-and-sandbox`, `claude --dangerou
 `kimi --auto` (`--yolo` still asks questions).
 
 Unlike `/my-crew`, nothing here needs to be *detectable* by Orca — you deliver text, not an injected
-dispatch. So **any** agent can take a split, and the command may carry env vars:
-`KIMI_CODE_NO_AUTO_UPDATE=1 kimi --auto` works here and is impossible there.
+dispatch. So **any** agent can take a split, and the command carries whatever you write — env vars and
+argv both: `KIMI_CODE_NO_AUTO_UPDATE=1 kimi --auto` works here and is impossible there.
 
 ## 3. Write the handoff file
 
@@ -110,8 +110,12 @@ send **one line** — read `<handoff path>` and execute it.
 **Then read the terminal back and confirm the prompt actually landed.** `send` returning
 `accepted: true` means the bytes reached the PTY, not that the TUI took them — an agent CLI still
 painting its banner drops them silently, and `wait --for tui-idle` reporting satisfied does **not** rule
-that out (measured, not theoretical). An empty input box, or a "no session yet" line, means it was lost:
-wait again and resend. Skip this check and a handoff looks delivered while nothing ever started.
+that out (measured, not theoretical): it narrows the window, the read-back is what proves delivery. Read
+**from the top** — `terminal read --terminal <h> --cursor 0 --limit 40` — because the default tail read
+returns the blank last line of a full-screen TUI and reads exactly like a TUI that never painted. An empty
+input box, or a "no session yet" line, means it was lost: **wait again and resend** — you delivered
+free-form text, so sending it again is the whole fix (`/my-crew` must rebuild instead — its payload is a
+dispatch bound to one attempt). Skip this check and a handoff looks delivered while nothing ever started.
 
 ## 6. Stop
 

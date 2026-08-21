@@ -23,8 +23,8 @@ Emit one copyable block in **English** and ask the user to run it before continu
 Then resume — every command in the family re-resolves its target from disk, so the work picks up cleanly from
 Phase 1. The target file and git hold the state; the conversation doesn't need to.
 
-`/my-build` is the strict case: when a signal fires with tasks still pending, require the compaction in **both**
-run modes. A bloated or fuzzy context degrades every remaining task, and auto-chain doesn't get to skip it.
+`/my-build` is the strict case: when a signal fires with tasks still pending, require the compaction in **every**
+run mode. A bloated or fuzzy context degrades every remaining task, and neither auto-chain nor team gets to skip it.
 
 ## Focus per command
 
